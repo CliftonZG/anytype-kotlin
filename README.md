@@ -1,6 +1,15 @@
 # Anytype
 
-Official Anytype client for Android.
+Forked Customized Anytype client for Android.
+
+## WARNING: My changes to this Client are highly experimental and dangerous!!
+
+I am not responsible, if the usage of this forked client corrupts your data in any way. I never do any QC before making commits here!! So do be careful and carefully read the changes I've made in the codebase itself. Spoilers (It's badly done). If you still want to try it, make sure to regularly back up your data.
+
+Several changes includesL
+- Forced support for screenOrientation="fullSensor" in manifest value. (Meaning it can now allow landscape mode, hurray for Tablet users!)
+- Latex Embed Block sort of (some of the existing code base, actually had Latex built in already, so I lazily copy/pasted some code, and added some more lines of code and files here and there. It seems to work and sync properly, but the encoding from plain text to Latex doesn't work 100% of the time)
+- That's all for now. I am not an experienced Android Developer by any means. So expect some things to break and crash when building or running this client. Thanks for reading.
 
 ## Build project
 
@@ -33,6 +42,15 @@ Based on your IDE setup, you might experience problems while accessing/importing
 
 ```
 idea.max.intellisense.filesize=3500
+```
+
+## Android Emulator setup (optional)
+
+After a successful build, and being able to launch the client. There might be a crash after trying to create a new vault for the first time or when trying to enter an existing one. This might be because of a SELinux error. Open the terminal and enter the following:
+```
+adb shell
+su 0 setenforce 0
+setprop ctl.restart zygote
 ```
 
 ## Useful links
