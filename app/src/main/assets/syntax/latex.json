@@ -1,0 +1,10 @@
+{
+  "template_1": "\\begin{align*} a&=b+c \\\\ d+e&=f \\end{align*}",
+  "template_2": "\\int_{-\\infty}^\\infty f(\\hat\\xi\\,)e^{2 \\pi i \\xi x}\\,d\\xi",
+  "template_3": "\\cfrac{a}{1 + b}",
+  "template_4": "\\dbinom{n}{k}",
+  "template_5": "\\begin{matrix} a & b \\\\ c & d \\end{matrix}",
+  "template_6": "\\begin{Bmatrix} 0 & -1 \\\\ -1 & 0 \\end{Bmatrix}",
+  "template_7": "\\sum_{\\mathclap{1\\le i\\le j\\le n}} x_{ij} + \\sum_{\\begin{subarray}{l}i\\in\\Lambda\\\\0<j<n\\end{subarray}}",
+  "template_8": "\\ce{C6H5-CHO}"
+}

@@ -289,7 +289,7 @@ interface TextBlockHolder : TextHolder {
 
         Timber.d("Processing $payload for new view:\n$item")
 
-        if (payload.textChanged()) {
+        if (payload.textChanged() || payload.latexChanged()) {
             content.pauseSelectionWatcher {
                 content.pauseTextWatchers {
                     setBlockText(

@@ -119,6 +119,10 @@ class BlockDataRepository(
         remote.updateText(command)
     }
 
+    override suspend fun updateLatex(command: Command.UpdateLatex) {
+        remote.updateLatex(command)
+    }
+
     override suspend fun updateTextStyle(
         command: Command.UpdateStyle
     ): Payload = remote.updateTextStyle(command)

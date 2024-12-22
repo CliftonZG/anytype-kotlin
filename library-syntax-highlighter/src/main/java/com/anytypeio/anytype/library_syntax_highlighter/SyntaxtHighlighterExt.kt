@@ -2,6 +2,7 @@ package com.anytypeio.anytype.library_syntax_highlighter
 
 import android.content.Context
 import android.graphics.Color
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -31,6 +32,14 @@ fun Context.obtainGenericSyntaxRules(): List<Syntax> {
 fun Context.obtainLanguages(): List<Pair<String, String>> {
     val json = obtainJsonDataFromAsset("syntax/languages.json")
     checkNotNull(json) { "Json data for languages is missing" }
+    return Json.parseToJsonElement(json).jsonObject.map { (key, element) ->
+        key to element.jsonPrimitive.content
+    }
+}
+
+fun Context.obtainLatexTemplates(): List<Pair<String, String>> {
+    val json = obtainJsonDataFromAsset("syntax/latex.json")
+    checkNotNull(json) { "Json data for latex templates is missing" }
     return Json.parseToJsonElement(json).jsonObject.map { (key, element) ->
         key to element.jsonPrimitive.content
     }

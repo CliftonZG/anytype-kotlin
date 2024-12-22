@@ -46,6 +46,13 @@ class SlashWidget @JvmOverloads constructor(
         )
     }
 
+    private val embedAdapter by lazy {
+        SlashEmbedAdapter(
+            items = listOf(),
+            clicks = { _clickEvents.trySend(it) }
+        )
+    }
+
     private val objectTypesAdapter by lazy {
         SlashObjectTypesAdapter(
             items = listOf(),
@@ -99,6 +106,7 @@ class SlashWidget @JvmOverloads constructor(
         mainAdapter,
         styleAdapter,
         mediaAdapter,
+        embedAdapter,
         objectTypesAdapter,
         relationsAdapter,
         otherAdapter,
@@ -131,6 +139,7 @@ class SlashWidget @JvmOverloads constructor(
                 mainAdapter.update(widgetState.mainItems)
                 styleAdapter.update(widgetState.styleItems)
                 mediaAdapter.update(widgetState.mediaItems)
+                embedAdapter.update(widgetState.embedItems)
                 objectTypesAdapter.update(widgetState.objectItems)
                 if (widgetState.relationItems.isEmpty()) {
                     relationsAdapter.clear()

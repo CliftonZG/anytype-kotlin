@@ -1328,9 +1328,16 @@ sealed class BlockView : ViewType {
         override val id: String,
         override val indent: Int,
         override val isSelected: Boolean,
-        val latex: String,
-        val background: ThemeColor = ThemeColor.DEFAULT
-    ) : BlockView(), Indentable, Selectable {
+        var latex: String,
+        override var text: String,
+        override val background: ThemeColor = ThemeColor.DEFAULT,
+        override val mode: Mode = Mode.EDIT,
+        override var isFocused: Boolean = false,
+        override val decorations: List<Decoration> = emptyList(),
+        override var cursor: Int? = null,
+        override val color: ThemeColor = ThemeColor.DEFAULT,
+    ) : BlockView(), Permission, Selectable, Focusable, Cursor, Indentable, TextSupport,
+        Decoratable {
         override fun getViewType(): Int = HOLDER_LATEX
     }
 

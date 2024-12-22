@@ -21,6 +21,7 @@ import com.anytypeio.anytype.domain.block.interactor.CreateBlock
 import com.anytypeio.anytype.domain.block.interactor.DuplicateBlock
 import com.anytypeio.anytype.domain.block.interactor.MergeBlocks
 import com.anytypeio.anytype.domain.block.interactor.Move
+import com.anytypeio.anytype.domain.block.interactor.MoveOld
 import com.anytypeio.anytype.domain.block.interactor.RemoveLinkMark
 import com.anytypeio.anytype.domain.block.interactor.ReplaceBlock
 import com.anytypeio.anytype.domain.block.interactor.SetLinkAppearance
@@ -34,6 +35,7 @@ import com.anytypeio.anytype.domain.block.interactor.UpdateBackgroundColor
 import com.anytypeio.anytype.domain.block.interactor.UpdateBlocksMark
 import com.anytypeio.anytype.domain.block.interactor.UpdateCheckbox
 import com.anytypeio.anytype.domain.block.interactor.UpdateFields
+import com.anytypeio.anytype.domain.block.interactor.UpdateLatex
 import com.anytypeio.anytype.domain.block.interactor.UpdateLinkMarks
 import com.anytypeio.anytype.domain.block.interactor.UpdateText
 import com.anytypeio.anytype.domain.block.interactor.UpdateTextColor
@@ -95,6 +97,7 @@ import com.anytypeio.anytype.domain.table.MoveTableColumn
 import com.anytypeio.anytype.domain.table.MoveTableRow
 import com.anytypeio.anytype.domain.table.SetTableRowHeader
 import com.anytypeio.anytype.domain.templates.ApplyTemplate
+import com.anytypeio.anytype.domain.templates.GetTemplates
 import com.anytypeio.anytype.domain.unsplash.DownloadUnsplashImage
 import com.anytypeio.anytype.domain.unsplash.UnsplashRepository
 import com.anytypeio.anytype.domain.workspace.FileLimitsEventChannel
@@ -109,6 +112,7 @@ import com.anytypeio.anytype.presentation.editor.EditorViewModel
 import com.anytypeio.anytype.presentation.editor.EditorViewModelFactory
 import com.anytypeio.anytype.presentation.editor.cover.CoverImageHashProvider
 import com.anytypeio.anytype.presentation.editor.editor.Interactor
+import com.anytypeio.anytype.presentation.editor.editor.LatexInteractor
 import com.anytypeio.anytype.presentation.editor.editor.Orchestrator
 import com.anytypeio.anytype.presentation.editor.editor.pattern.DefaultPatternMatcher
 import com.anytypeio.anytype.presentation.editor.editor.table.DefaultEditorTableDelegate
@@ -438,6 +442,7 @@ object EditorSessionModule {
         updateCheckbox: UpdateCheckbox,
         downloadFile: DownloadFile,
         updateText: UpdateText,
+        updateLatex: UpdateLatex,
         uploadBlock: UploadBlock,
         updateFields: UpdateFields,
         updateAlignment: UpdateAlignment,
@@ -486,7 +491,12 @@ object EditorSessionModule {
             stores = storage,
             matcher = matcher
         ),
+        latexInteractor = LatexInteractor.LatexTextInteractor(
+            proxies = proxer,
+            stores = storage,
+        ),
         updateText = updateText,
+        updateLatex = updateLatex,
         updateAlignment = updateAlignment,
         setupBookmark = setupBookmark,
         createBookmarkBlock = createBookmarkBlock,
@@ -546,6 +556,15 @@ object EditorUseCaseModule {
     fun provideUpdateBlockUseCase(
         repo: BlockRepository
     ): UpdateText = UpdateText(
+        repo = repo
+    )
+
+    @JvmStatic
+    @Provides
+    @PerScreen
+    fun provideUpdateLatexBlockUseCase(
+        repo: BlockRepository
+    ): UpdateLatex = UpdateLatex(
         repo = repo
     )
 
@@ -721,6 +740,7 @@ object EditorUseCaseModule {
     @PerScreen
     fun provideCreateObjectUseCase(
         repo: BlockRepository,
+        getTemplates: GetTemplates,
         dispatchers: AppCoroutineDispatchers
     ): CreateBlockLinkWithObject =
         CreateBlockLinkWithObject(
@@ -733,6 +753,8 @@ object EditorUseCaseModule {
     @PerScreen
     fun provideCreateObjectAsMentionOrLink(
         repo: BlockRepository,
+        getDefaultObjectType: GetDefaultObjectType,
+        getTemplates: GetTemplates,
         dispatchers: AppCoroutineDispatchers,
         spaceManager: SpaceManager
     ): CreateObjectAsMentionOrLink = CreateObjectAsMentionOrLink(
@@ -817,6 +839,15 @@ object EditorUseCaseModule {
     ): Copy = Copy(
         repo = repo,
         clipboard = clipboard
+    )
+
+    @JvmStatic
+    @Provides
+    @PerScreen
+    fun provideMoveUseCase(
+        repo: BlockRepository
+    ): MoveOld = MoveOld(
+        repo = repo
     )
 
     @JvmStatic
@@ -997,6 +1028,20 @@ object EditorUseCaseModule {
     fun provideSetDocumentImageIconUseCase(
         repo: BlockRepository
     ): SetDocumentImageIcon = SetDocumentImageIcon(repo)
+
+    @JvmStatic
+    @Provides
+    @PerScreen
+    fun getTemplates(
+        repo: BlockRepository,
+        spaceManager: SpaceManager,
+        dispatchers: AppCoroutineDispatchers
+    ): GetTemplates =
+        GetTemplates(
+            repo = repo,
+            spaceManager = spaceManager,
+            dispatchers = dispatchers
+        )
 
     @JvmStatic
     @Provides

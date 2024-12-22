@@ -57,6 +57,14 @@ class DocumentExternalEventReducer : StateReducer<List<Block>, Event> {
                             backgroundColor = event.backgroundColor ?: block.backgroundColor,
                         )
                     }
+                    is Block.Content.Latex -> {
+                        block.copy(
+                            content = content.copy(
+                                text = event.text ?: content.text,
+                            ),
+                            backgroundColor = event.backgroundColor ?: block.backgroundColor,
+                        )
+                    }
                     else -> block.copy(
                         backgroundColor = event.backgroundColor ?: block.backgroundColor,
                     )

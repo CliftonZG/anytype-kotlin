@@ -32,6 +32,7 @@ class MiddlewareEventChannel(
     private fun anytype.Event.Message.isAccepted() : Boolean = when {
         blockAdd != null -> true
         blockSetText != null -> true
+        blockSetLatex != null -> true
         blockSetChildrenIds != null -> true
         blockSetBackgroundColor != null -> true
         objectDetailsSet != null -> true

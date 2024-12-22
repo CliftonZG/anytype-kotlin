@@ -9,6 +9,7 @@ import android.graphics.Point
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -146,6 +147,8 @@ import com.anytypeio.anytype.ui.editor.gallery.FullScreenPictureFragment
 import com.anytypeio.anytype.ui.editor.layout.ObjectLayoutFragment
 import com.anytypeio.anytype.ui.editor.modals.CreateBookmarkFragment
 import com.anytypeio.anytype.ui.editor.modals.IconPickerFragmentBase
+import com.anytypeio.anytype.ui.editor.modals.SelectLatexTemplateFragment
+import com.anytypeio.anytype.ui.editor.modals.SelectLatexTemplateReceiver
 import com.anytypeio.anytype.ui.editor.modals.SelectProgrammingLanguageFragment
 import com.anytypeio.anytype.ui.editor.modals.SelectProgrammingLanguageReceiver
 import com.anytypeio.anytype.ui.editor.modals.SetBlockTextValueFragment
@@ -189,6 +192,7 @@ import timber.log.Timber
 open class EditorFragment : NavigationFragment<FragmentEditorBinding>(R.layout.fragment_editor),
     OnFragmentInteractionListener,
     SelectProgrammingLanguageReceiver,
+    SelectLatexTemplateReceiver,
     RelationTextValueFragment.TextValueEditReceiver,
     RelationDateValueFragment.DateValueEditReceiver,
     DocumentMenuActionReceiver,
@@ -299,6 +303,13 @@ open class EditorFragment : NavigationFragment<FragmentEditorBinding>(R.layout.f
                     marks = editable.extractMarks()
                 )
             },
+            onLatexChanged = { id, editable ->
+                vm.onLatexChanged(
+                    id = id,
+                    text = editable.toString(),
+                )
+            },
+            onLatexBlockTextChanged = vm::onLatexBlockTextChanged,
             onTextBlockTextChanged = vm::onTextBlockTextChanged,
             onDescriptionChanged = vm::onDescriptionBlockTextChanged,
             onTitleBlockTextChanged = vm::onTitleBlockTextChanged,
@@ -1045,6 +1056,10 @@ open class EditorFragment : NavigationFragment<FragmentEditorBinding>(R.layout.f
                 }
                 is Command.Dialog.SelectLanguage -> {
                     SelectProgrammingLanguageFragment.new(command.target)
+                        .showChildFragment()
+                }
+                is Command.Dialog.SelectLatexTemplate -> {
+                    SelectLatexTemplateFragment.new(command.template)
                         .showChildFragment()
                 }
                 is Command.OpenObjectRelationScreen.RelationAdd -> {
@@ -2069,6 +2084,11 @@ open class EditorFragment : NavigationFragment<FragmentEditorBinding>(R.layout.f
     override fun onLanguageSelected(target: Id, key: String) {
         Timber.d("key: $key")
         vm.onSelectProgrammingLanguageClicked(target, key)
+    }
+
+    override fun onLatexTemplateSelected(target: Id, key: String, value: String) {
+        Timber.d("key: $key, value: $value")
+        vm.onSelectLatexTemplateClicked(target, key, value)
     }
 
     override fun onSearchOnPageClicked() {

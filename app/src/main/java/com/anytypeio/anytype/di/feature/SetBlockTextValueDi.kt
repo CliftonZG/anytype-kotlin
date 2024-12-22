@@ -3,6 +3,7 @@ package com.anytypeio.anytype.di.feature
 import com.anytypeio.anytype.analytics.base.Analytics
 import com.anytypeio.anytype.core_models.Payload
 import com.anytypeio.anytype.core_utils.di.scope.PerDialog
+import com.anytypeio.anytype.domain.block.interactor.UpdateLatex
 import com.anytypeio.anytype.domain.block.interactor.UpdateText
 import com.anytypeio.anytype.domain.clipboard.Copy
 import com.anytypeio.anytype.domain.clipboard.Paste
@@ -39,6 +40,7 @@ object SetBlockTextValueModule {
         paste: Paste,
         copy: Copy,
         updateText: UpdateText,
+        updateLatex: UpdateLatex,
         analytics: Analytics
     ): SetBlockTextValueViewModel.Factory =
         SetBlockTextValueViewModel.Factory(
@@ -47,6 +49,7 @@ object SetBlockTextValueModule {
             paste = paste,
             copy = copy,
             updateText = updateText,
+            updateLatex = updateLatex,
             analytics = analytics
         )
 }

@@ -12,8 +12,10 @@ import com.anytypeio.anytype.core_models.ObjectWrapper
 import com.anytypeio.anytype.core_models.Payload
 import com.anytypeio.anytype.core_models.Relation
 import com.anytypeio.anytype.core_models.RelationLink
+import com.anytypeio.anytype.core_models.Relations
 import com.anytypeio.anytype.core_models.SearchResult
 import com.anytypeio.anytype.core_models.StubConfig
+import com.anytypeio.anytype.core_models.StubObject
 import com.anytypeio.anytype.core_models.multiplayer.SpaceMemberPermissions
 import com.anytypeio.anytype.core_models.primitives.SpaceId
 import com.anytypeio.anytype.core_models.primitives.TypeId
@@ -24,6 +26,7 @@ import com.anytypeio.anytype.domain.base.AppCoroutineDispatchers
 import com.anytypeio.anytype.domain.base.Either
 import com.anytypeio.anytype.domain.base.Result
 import com.anytypeio.anytype.domain.base.Resultat
+import com.anytypeio.anytype.domain.block.interactor.UpdateLatex
 import com.anytypeio.anytype.domain.block.interactor.UpdateText
 import com.anytypeio.anytype.domain.block.interactor.sets.GetObjectTypes
 import com.anytypeio.anytype.domain.block.repo.BlockRepository
@@ -31,10 +34,12 @@ import com.anytypeio.anytype.domain.collections.AddObjectToCollection
 import com.anytypeio.anytype.domain.config.Gateway
 import com.anytypeio.anytype.domain.cover.SetDocCoverImage
 import com.anytypeio.anytype.domain.dataview.interactor.CreateDataViewObject
+import com.anytypeio.anytype.domain.dataview.interactor.UpdateDataViewViewer
 import com.anytypeio.anytype.domain.debugging.Logger
 import com.anytypeio.anytype.domain.event.interactor.InterceptEvents
 import com.anytypeio.anytype.domain.event.interactor.SpaceSyncAndP2PStatusProvider
 import com.anytypeio.anytype.domain.launch.GetDefaultObjectType
+import com.anytypeio.anytype.domain.library.StoreSearchByIdsParams
 import com.anytypeio.anytype.domain.library.StorelessSubscriptionContainer
 import com.anytypeio.anytype.domain.misc.DateProvider
 import com.anytypeio.anytype.domain.misc.LocaleProvider
@@ -57,6 +62,7 @@ import com.anytypeio.anytype.domain.page.CreateObject
 import com.anytypeio.anytype.domain.primitives.FieldParser
 import com.anytypeio.anytype.domain.primitives.FieldParserImpl
 import com.anytypeio.anytype.domain.resources.StringResourceProvider
+import com.anytypeio.anytype.domain.search.CancelSearchSubscription
 import com.anytypeio.anytype.domain.search.DataViewSubscriptionContainer
 import com.anytypeio.anytype.domain.search.SubscriptionEventChannel
 import com.anytypeio.anytype.domain.sets.OpenObjectSet
@@ -70,6 +76,7 @@ import com.anytypeio.anytype.presentation.collections.MockSet
 import com.anytypeio.anytype.presentation.common.Action
 import com.anytypeio.anytype.presentation.common.Delegator
 import com.anytypeio.anytype.presentation.editor.cover.CoverImageHashProvider
+import com.anytypeio.anytype.presentation.home.HomeScreenViewModel.Companion.HOME_SCREEN_PROFILE_OBJECT_SUBSCRIPTION
 import com.anytypeio.anytype.presentation.home.UserPermissionProviderStub
 import com.anytypeio.anytype.presentation.relations.ObjectSetConfig
 import com.anytypeio.anytype.presentation.search.ObjectSearchConstants
@@ -126,10 +133,16 @@ open class ObjectSetViewModelTestSetup {
     lateinit var updateText: UpdateText
 
     @Mock
+    lateinit var updateLatex: UpdateLatex
+
+    @Mock
     lateinit var createDataViewObject: CreateDataViewObject
 
     @Mock
     lateinit var interceptEvents: InterceptEvents
+
+    @Mock
+    lateinit var clearLastOpenedObject: ClearLastOpenedObject
 
     @Mock
     lateinit var gateway: Gateway
@@ -154,6 +167,9 @@ open class ObjectSetViewModelTestSetup {
 
     @Mock
     lateinit var setObjectDetails: UpdateDetail
+
+    @Mock
+    lateinit var cancelSearchSubscription: CancelSearchSubscription
 
     //@Mock
     lateinit var repo: BlockRepository
@@ -185,12 +201,18 @@ open class ObjectSetViewModelTestSetup {
     lateinit var templatesContainer: ObjectTypeTemplatesContainer
 
     @Mock
+    lateinit var updateDataViewViewer: UpdateDataViewViewer
+
+    @Mock
     lateinit var viewerDelegate: ViewerDelegate
 
     lateinit var spaceManager: SpaceManager
 
     @Mock
     lateinit var createTemplate: CreateTemplate
+
+    @Mock
+    lateinit var storelessSubscriptionContainer: StorelessSubscriptionContainer
 
     @Mock
     lateinit var getNetworkMode: GetNetworkMode
@@ -311,6 +333,8 @@ open class ObjectSetViewModelTestSetup {
             spaceManager = spaceManager,
             createTemplate = createTemplate,
             getObjectTypes = getObjectTypes,
+            storelessSubscriptionContainer = storelessSubscriptionContainer,
+            dispatchers = dispatchers,
             dateProvider = dateProvider,
             vmParams = ObjectSetViewModel.Params(
                 ctx = root,
@@ -319,7 +343,8 @@ open class ObjectSetViewModelTestSetup {
             permissions = permissions,
             analyticSpaceHelperDelegate = analyticSpaceHelperDelegate,
             spaceSyncAndP2PStatusProvider = spaceSyncAndP2PStatusProvider,
-            fieldParser = fieldParser
+            fieldParser = fieldParser,
+            updateLatex = updateLatex
         )
     }
 
@@ -390,6 +415,25 @@ open class ObjectSetViewModelTestSetup {
                 space = space
             )
             spaceManager.set(space)
+        }
+    }
+
+    fun stubProfileIcon() {
+        val searchParams = StoreSearchByIdsParams(
+            space = SpaceId(spaceConfig.techSpace),
+            subscription = HOME_SCREEN_PROFILE_OBJECT_SUBSCRIPTION,
+            targets = listOf(spaceConfig.profile),
+            keys = listOf(
+                Relations.ID,
+                Relations.SPACE_ID,
+                Relations.NAME,
+                Relations.ICON_EMOJI,
+                Relations.ICON_IMAGE,
+                Relations.ICON_OPTION
+            )
+        )
+        storelessSubscriptionContainer.stub {
+            onBlocking { subscribe(searchParams) } doReturn flowOf(listOf(StubObject()))
         }
     }
 
@@ -519,6 +563,15 @@ open class ObjectSetViewModelTestSetup {
         getNetworkMode.stub {
             onBlocking { run(Unit) } doReturn NetworkModeConfig()
         }
+    }
+
+    fun stubGetSpaceConfig() {
+        spaceManager.stub {
+            onBlocking {
+                getConfig(SpaceId(defaultSpace))
+            } doReturn null
+        }
+
     }
 
     fun stubObservePermissions(

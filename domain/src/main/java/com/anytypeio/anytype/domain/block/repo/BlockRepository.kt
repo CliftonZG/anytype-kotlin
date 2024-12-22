@@ -95,6 +95,7 @@ interface BlockRepository {
 
     suspend fun updateDocumentTitle(command: Command.UpdateTitle)
     suspend fun updateText(command: Command.UpdateText)
+    suspend fun updateLatex(command: Command.UpdateLatex)
     suspend fun updateTextStyle(command: Command.UpdateStyle): Payload
     suspend fun setTextIcon(command: Command.SetTextIcon): Payload
     suspend fun setLinkAppearance(command: Command.SetLinkAppearance): Payload

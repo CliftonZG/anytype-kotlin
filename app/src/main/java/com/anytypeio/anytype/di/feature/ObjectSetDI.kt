@@ -15,7 +15,9 @@ import com.anytypeio.anytype.di.feature.relations.RelationCreateFromScratchForOb
 import com.anytypeio.anytype.di.feature.sets.CreateFilterSubComponent
 import com.anytypeio.anytype.di.feature.sets.ModifyFilterSubComponent
 import com.anytypeio.anytype.di.feature.sets.SelectFilterRelationSubComponent
+import com.anytypeio.anytype.domain.auth.interactor.ClearLastOpenedObject
 import com.anytypeio.anytype.domain.base.AppCoroutineDispatchers
+import com.anytypeio.anytype.domain.block.interactor.UpdateLatex
 import com.anytypeio.anytype.domain.block.interactor.UpdateText
 import com.anytypeio.anytype.domain.block.interactor.sets.GetObjectTypes
 import com.anytypeio.anytype.domain.block.repo.BlockRepository
@@ -33,6 +35,7 @@ import com.anytypeio.anytype.domain.event.interactor.InterceptEvents
 import com.anytypeio.anytype.domain.event.interactor.SpaceSyncAndP2PStatusProvider
 import com.anytypeio.anytype.domain.icon.SetDocumentImageIcon
 import com.anytypeio.anytype.domain.launch.GetDefaultObjectType
+import com.anytypeio.anytype.domain.library.StorelessSubscriptionContainer
 import com.anytypeio.anytype.domain.misc.DateProvider
 import com.anytypeio.anytype.domain.misc.UrlBuilder
 import com.anytypeio.anytype.domain.multiplayer.UserPermissionProvider
@@ -196,6 +199,7 @@ object ObjectSetModule {
         closeBlock: CloseBlock,
         setObjectDetails: UpdateDetail,
         updateText: UpdateText,
+        updateLatex: UpdateLatex,
         interceptEvents: InterceptEvents,
         createDataViewObject: CreateDataViewObject,
         createObject: CreateObject,
@@ -225,8 +229,11 @@ object ObjectSetModule {
         createTemplate: CreateTemplate,
         viewerDelegate: ViewerDelegate,
         spaceManager: SpaceManager,
+        storelessSubscriptionContainer: StorelessSubscriptionContainer,
+        dispatchers: AppCoroutineDispatchers,
         dateProvider: DateProvider,
         permissions: UserPermissionProvider,
+        clearLastOpenedObject: ClearLastOpenedObject,
         analyticSpaceHelperDelegate: AnalyticSpaceHelperDelegate,
         spaceSyncAndP2PStatusProvider: SpaceSyncAndP2PStatusProvider,
         fieldParser: FieldParser
@@ -237,6 +244,7 @@ object ObjectSetModule {
         setObjectDetails = setObjectDetails,
         createDataViewObject = createDataViewObject,
         updateText = updateText,
+        updateLatex = updateLatex,
         interceptEvents = interceptEvents,
         dispatcher = dispatcher,
         delegator = delegator,
@@ -265,6 +273,8 @@ object ObjectSetModule {
         viewerDelegate = viewerDelegate,
         spaceManager = spaceManager,
         createTemplate = createTemplate,
+        storelessSubscriptionContainer = storelessSubscriptionContainer,
+        dispatchers = dispatchers,
         dateProvider = dateProvider,
         permissions = permissions,
         analyticSpaceHelperDelegate = analyticSpaceHelperDelegate,
@@ -334,6 +344,13 @@ object ObjectSetModule {
     fun provideUpdateTextUseCase(
         repo: BlockRepository
     ): UpdateText = UpdateText(repo = repo)
+
+    @JvmStatic
+    @Provides
+    @PerScreen
+    fun provideUpdateLatexUseCase(
+        repo: BlockRepository
+    ): UpdateLatex = UpdateLatex(repo = repo)
 
     @JvmStatic
     @Provides

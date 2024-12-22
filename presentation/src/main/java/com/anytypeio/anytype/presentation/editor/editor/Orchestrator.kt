@@ -1,5 +1,6 @@
 package com.anytypeio.anytype.presentation.editor.editor
 
+import android.util.Log
 import com.anytypeio.anytype.analytics.base.Analytics
 import com.anytypeio.anytype.analytics.event.EventAnalytics
 import com.anytypeio.anytype.core_models.Block
@@ -24,6 +25,7 @@ import com.anytypeio.anytype.domain.block.interactor.UpdateBackgroundColor
 import com.anytypeio.anytype.domain.block.interactor.UpdateBlocksMark
 import com.anytypeio.anytype.domain.block.interactor.UpdateCheckbox
 import com.anytypeio.anytype.domain.block.interactor.UpdateFields
+import com.anytypeio.anytype.domain.block.interactor.UpdateLatex
 import com.anytypeio.anytype.domain.block.interactor.UpdateText
 import com.anytypeio.anytype.domain.block.interactor.UpdateTextColor
 import com.anytypeio.anytype.domain.block.interactor.UpdateTextStyle
@@ -75,6 +77,7 @@ class Orchestrator(
     private val downloadFile: DownloadFile,
     private val documentFileShareDownloader: DocumentFileShareDownloader,
     val updateText: UpdateText,
+    val updateLatex: UpdateLatex,
     private val updateAlignment: UpdateAlignment,
     private val uploadBlock: UploadBlock,
     private val setupBookmark: SetupBookmark,
@@ -94,6 +97,7 @@ class Orchestrator(
     val stores: Editor.Storage,
     val proxies: Editor.Proxer,
     val textInteractor: Interactor.TextInteractor,
+    val latexInteractor: LatexInteractor.LatexTextInteractor,
     private val analytics: Analytics,
     private val clearBlockContent: ClearBlockContent,
     private val clearBlockStyle: ClearBlockStyle,
@@ -108,6 +112,7 @@ class Orchestrator(
             val spaceParams = provideParams(space.id)
             when (intent) {
                 is Intent.CRUD.Create -> {
+                    Timber.d("Orchestrator, Intent.CRUD.Create")
                     val startTime = System.currentTimeMillis()
                     createBlock.async(
                         params = CreateBlock.Params(
@@ -134,6 +139,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.CRUD.Replace -> {
+                    Timber.d("Orchestrator, Intent.CRUD.Replace")
                     val startTime = System.currentTimeMillis()
                     replaceBlock(
                         params = ReplaceBlock.Params(
@@ -157,6 +163,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.CRUD.Duplicate -> {
+                    Timber.d("Orchestrator, Intent.CRUD.Duplicate")
                     duplicateBlock(
                         params = DuplicateBlock.Params(
                             context = intent.context,
@@ -178,6 +185,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.CRUD.Unlink -> {
+                    Timber.d("Orchestrator, Intent.CRUD.Unlink")
                     unlinkBlocks(
                         params = UnlinkBlocks.Params(
                             context = intent.context,
@@ -204,6 +212,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.CRUD.UpdateFields -> {
+                    Timber.d("Orchestrator, Intent.CRUD.UpdateFields")
                     updateFields(
                         params = UpdateFields.Params(
                             context = intent.context,
@@ -215,6 +224,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Text.Split -> {
+                    Timber.d("Orchestrator, Intent.Text.Split")
                     val startTime = System.currentTimeMillis()
                     splitBlock(
                         params = SplitBlock.Params(
@@ -244,6 +254,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Text.Merge -> {
+                    Timber.d("Orchestrator, Intent.Text.Merge")
                     mergeBlocks(
                         params = MergeBlocks.Params(
                             context = intent.context,
@@ -270,6 +281,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Text.UpdateColor -> {
+                    Timber.d("Orchestrator, Intent.Text.UpdateColor")
                     updateTextColor(
                         params = UpdateTextColor.Params(
                             context = intent.context,
@@ -284,6 +296,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Text.UpdateBackgroundColor -> {
+                    Timber.d("Orchestrator, Intent.Text.UpdateBackgroundColor")
                     updateBackgroundColor(
                         params = UpdateBackgroundColor.Params(
                             context = intent.context,
@@ -298,6 +311,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Text.UpdateMark -> {
+                    Timber.d("Orchestrator, Intent.Text.UpdateMark")
                     updateBlocksMark(
                         params = UpdateBlocksMark.Params(
                             context = intent.context,
@@ -312,6 +326,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Text.UpdateStyle -> {
+                    Timber.d("Orchestrator, Intent.Text.UpdateStyle")
                     updateTextStyle(
                         params = UpdateTextStyle.Params(
                             context = intent.context,
@@ -326,6 +341,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Text.TurnInto -> {
+                    Timber.d("Orchestrator, Intent.Text.TurnInto")
                     turnIntoStyle(
                         params = TurnIntoStyle.Params(
                             context = intent.context,
@@ -344,6 +360,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Text.UpdateCheckbox -> {
+                    Timber.d("Orchestrator, Intent.Text.UpdateCheckbox")
                     updateCheckbox(
                         params = UpdateCheckbox.Params(
                             context = intent.context,
@@ -358,6 +375,11 @@ class Orchestrator(
                     )
                 }
                 is Intent.Text.UpdateText -> {
+                    Log.v("Orchestrator", "Intent.Text.UpdateText")
+                    Log.v("Orchestrator", "target: ${intent.target}")
+                    Log.v("Orchestrator", "context: ${intent.context}")
+                    Log.v("Orchestrator", "text: ${intent.text}")
+                    Log.v("Orchestrator", "marks: ${intent.marks}")
                     updateText(
                         params = UpdateText.Params(
                             context = intent.context,
@@ -370,7 +392,24 @@ class Orchestrator(
                         success = {}
                     )
                 }
+                is Intent.Embed.UpdateLatex -> {
+                    Log.v("Orchestrator", "Intent.Latex.UpdateLatex")
+                    Log.v("Orchestrator", "target: ${intent.target}")
+                    Log.v("Orchestrator", "context: ${intent.context}")
+                    Log.v("Orchestrator", "text: ${intent.text}")
+                    updateLatex(
+                        params = UpdateLatex.Params(
+                            context = intent.context,
+                            target = intent.target,
+                            text = intent.text,
+                        )
+                    ).proceed(
+                        failure = defaultOnError,
+                        success = {}
+                    )
+                }
                 is Intent.Text.Align -> {
+                    Timber.d("Orchestrator, Intent.Text.Align")
                     updateAlignment(
                         params = UpdateAlignment.Params(
                             context = intent.context,
@@ -385,6 +424,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Document.Redo -> {
+                    Timber.d("Orchestrator, Intent.Document.Redo")
                     redo(
                         params = Redo.Params(
                             context = intent.context
@@ -402,6 +442,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Document.Undo -> {
+                    Timber.d("Orchestrator, Intent.Document.Undo")
                     undo(
                         params = Undo.Params(
                             context = intent.context
@@ -419,6 +460,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Document.Move -> {
+                    Timber.d("Orchestrator, Intent.Document.Move")
                     move.async(
                         params = Move.Params(
                             context = intent.context,
@@ -439,6 +481,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Document.TurnIntoDocument -> {
+                    Timber.d("Orchestrator, Intent.Document.TurnIntoDocument")
                     turnIntoDocument(
                         params = TurnIntoDocument.Params(
                             context = intent.context,
@@ -450,6 +493,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Media.DownloadFile -> {
+                    Timber.d("Orchestrator, Intent.Media.DownloadFile")
                     downloadFile(
                         params = DownloadFile.Params(
                             url = intent.url,
@@ -461,6 +505,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Media.ShareFile -> {
+                    Timber.d("Orchestrator, Intent.Media.ShareFile")
                     documentFileShareDownloader.async(
                         params = MiddlewareShareDownloader.Params(
                             objectId = intent.objectId,
@@ -475,6 +520,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Media.Upload -> {
+                    Timber.d("Orchestrator, Intent.Media.Upload")
                     uploadBlock(
                         params = UploadBlock.Params(
                             contextId = intent.context,
@@ -491,6 +537,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Bookmark.SetupBookmark -> {
+                    Timber.d("Orchestrator, Intent.Bookmark.SetupBookmark")
                     setupBookmark(
                         params = SetupBookmark.Params(
                             context = intent.context,
@@ -507,6 +554,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Bookmark.CreateBookmark -> {
+                    Timber.d("Orchestrator, Intent.Bookmark.CreateBookmark")
                     val startTime = System.currentTimeMillis()
                     createBookmarkBlock(
                         params = CreateBookmarkBlock.Params(
@@ -532,6 +580,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Clipboard.Paste -> {
+                    Timber.d("Orchestrator, Intent.Clipboard.Paste")
                     paste(
                         params = Paste.Params(
                             context = intent.context,
@@ -563,6 +612,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Clipboard.Copy -> {
+                    Timber.d("Orchestrator, Intent.Clipboard.Copy")
                     copy(
                         params = Copy.Params(
                             context = intent.context,
@@ -578,6 +628,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Divider.UpdateStyle -> {
+                    Timber.d("Orchestrator, Intent.Divider.UpdateStyle")
                     val startTime = System.currentTimeMillis()
                     updateDivider(
                         params = UpdateDivider.Params(
@@ -593,6 +644,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Document.SetRelationKey -> {
+                    Timber.d("Orchestrator, Intent.Document.SetRelationKey")
                     setRelationKey(
                         params = SetRelationKey.Params(
                             contextId = intent.context,
@@ -605,6 +657,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Table.CreateTable -> {
+                    Timber.d("Orchestrator, Intent.Table.CreateTable")
                     val startTime = System.currentTimeMillis()
                     createTable(
                         params = CreateTable.Params(
@@ -629,6 +682,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Table.FillTableRow -> {
+                    Timber.d("Orchestrator, Intent.Table.FillTableRow")
                     fillTableRow(
                         params = FillTableRow.Params(
                             ctx = intent.ctx,
@@ -640,6 +694,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Text.ClearContent -> {
+                    Timber.d("Orchestrator, Intent.Text.ClearContent")
                     clearBlockContent(
                         params = ClearBlockContent.Params(
                             ctx = intent.context,
@@ -651,6 +706,7 @@ class Orchestrator(
                     )
                 }
                 is Intent.Text.ClearStyle -> {
+                    Timber.d("Orchestrator, Intent.Text.ClearStyle")
                     clearBlockStyle(
                         params = ClearBlockStyle.Params(
                             ctx = intent.context,
@@ -661,11 +717,15 @@ class Orchestrator(
                         success = { payload -> proxies.payloads.send(payload) }
                     )
                 }
+                else -> {
+                    Log.v("Orchestrator", "intent: $intent")
+                }
             }
         }
     }
 
     private suspend fun processSideEffects(effects: List<SideEffect>) {
+        Timber.d("Orchestrator, processSideEffects, effects: $effects")
         effects.forEach { effect ->
             when(effect) {
                 SideEffect.ClearMultiSelectSelection -> {
@@ -685,6 +745,7 @@ class Orchestrator(
     }
 
     private suspend fun sendEvent(event: EventAnalytics.Anytype) {
+        Timber.d("Orchestrator, sendEvent, event: $event")
         analytics.registerEvent(event)
     }
 }

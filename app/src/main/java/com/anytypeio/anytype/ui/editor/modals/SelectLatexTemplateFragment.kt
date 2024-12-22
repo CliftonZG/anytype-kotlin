@@ -10,24 +10,24 @@ import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.anytypeio.anytype.core_models.Id
 import com.anytypeio.anytype.core_ui.extensions.color
-import com.anytypeio.anytype.core_ui.features.editor.modal.SelectProgrammingLanguageAdapter
+import com.anytypeio.anytype.core_ui.features.editor.modal.SelectLatexTemplateAdapter
 import com.anytypeio.anytype.core_utils.ui.BaseBottomSheetFragment
-import com.anytypeio.anytype.databinding.FragmentSelectProgrammingLanguageBinding
-import com.anytypeio.anytype.library_syntax_highlighter.obtainLanguages
+import com.anytypeio.anytype.databinding.FragmentSelectLatexTemplateBinding
+import com.anytypeio.anytype.library_syntax_highlighter.obtainLatexTemplates
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import timber.log.Timber
 
-class SelectProgrammingLanguageFragment :
-    BaseBottomSheetFragment<FragmentSelectProgrammingLanguageBinding>() {
+class SelectLatexTemplateFragment :
+    BaseBottomSheetFragment<FragmentSelectLatexTemplateBinding>() {
 
-    private val selectLangAdapter by lazy {
-        SelectProgrammingLanguageAdapter(
-            items = requireContext().obtainLanguages()
-        ) { lang ->
+    private val selectLatexTemplateAdapter by lazy {
+        SelectLatexTemplateAdapter(
+            items = requireContext().obtainLatexTemplates()
+        ) { template, value ->
             val parent = parentFragment
-            Log.v("SelectProgrammingLanguageFragment", "$parent")
-            check(parent is SelectProgrammingLanguageReceiver)
-            parent.onLanguageSelected(target, lang)
+            Log.v("SelectLatexTemplateFragment", "$parent")
+            check(parent is SelectLatexTemplateReceiver)
+            parent.onLatexTemplateSelected(target, template, value)
             dismiss()
         }
     }
@@ -48,7 +48,7 @@ class SelectProgrammingLanguageFragment :
         }
         binding.recycler.apply {
             layoutManager = LinearLayoutManager(context)
-            adapter = selectLangAdapter
+            adapter = selectLatexTemplateAdapter
         }
     }
 
@@ -58,20 +58,20 @@ class SelectProgrammingLanguageFragment :
     override fun inflateBinding(
         inflater: LayoutInflater,
         container: ViewGroup?
-    ): FragmentSelectProgrammingLanguageBinding = FragmentSelectProgrammingLanguageBinding.inflate(
+    ): FragmentSelectLatexTemplateBinding = FragmentSelectLatexTemplateBinding.inflate(
         inflater, container, false
     )
 
     companion object {
-        fun new(target: Id) = SelectProgrammingLanguageFragment().apply {
+        fun new(target: Id) = SelectLatexTemplateFragment().apply {
             arguments = bundleOf(ARG_TARGET to target)
         }
 
-        private const val ARG_TARGET = "arg.select_language.target"
+        private const val ARG_TARGET = "arg.select_latex_template.target"
         private const val MISSING_TARGET_ERROR = "Target missing in args"
     }
 }
 
-interface SelectProgrammingLanguageReceiver {
-    fun onLanguageSelected(target: Id, key: String)
+interface SelectLatexTemplateReceiver {
+    fun onLatexTemplateSelected(target: Id, key: String, value: String)
 }

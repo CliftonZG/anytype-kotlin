@@ -1,5 +1,6 @@
 package com.anytypeio.anytype.middleware.block
 
+import android.util.Log
 import com.anytypeio.anytype.core_models.Block
 import com.anytypeio.anytype.core_models.CBTextStyle
 import com.anytypeio.anytype.core_models.Command
@@ -49,6 +50,10 @@ class BlockMiddleware(
     private val middleware: Middleware
 ) : BlockRemote {
 
+    init {
+        Log.v("BlockMiddleware", "initialized")
+    }
+
     override suspend fun openObject(id: Id, space: SpaceId): ObjectView = middleware.objectOpen(id = id, space = space)
     override suspend fun getObject(id: Id, space: SpaceId): ObjectView = middleware.objectShow(id = id, space = space)
 
@@ -78,12 +83,28 @@ class BlockMiddleware(
     }
 
     override suspend fun updateText(command: Command.UpdateText) {
-        middleware.blockTextSetText(
+        Log.v("BlockMiddleware", "updateText")
+        Log.v("BlockMiddleware", "command: $command")
+        val update = middleware.blockTextSetText(
             command.contextId,
             command.blockId,
             command.text,
             command.marks.map { it.toMiddlewareModel() }
         )
+        Log.v("BlockMiddleware", "update: $update")
+        return update
+    }
+
+    override suspend fun updateLatex(command: Command.UpdateLatex) {
+        Log.v("BlockMiddleware", "updateLatex")
+        Log.v("BlockMiddleware", "command: $command")
+        val update = middleware.blockTextSetLatex(
+            command.contextId,
+            command.blockId,
+            command.text,
+        )
+        Log.v("BlockMiddleware", "update: $update")
+        return update
     }
 
     override suspend fun setLinkAppearance(command: Command.SetLinkAppearance): Payload {
@@ -95,11 +116,23 @@ class BlockMiddleware(
 
     override suspend fun updateTextStyle(
         command: Command.UpdateStyle
-    ): Payload = middleware.blockTextListSetStyle(command)
+    ): Payload {
+        Log.v("BlockMiddleware", "updateTextStyle")
+        Log.v("BlockMiddleware", "command: $command")
+        val update = middleware.blockTextListSetStyle(command)
+        Log.v("BlockMiddleware", "update: $update")
+        return update
+    }
 
     override suspend fun setTextIcon(
         command: Command.SetTextIcon
-    ): Payload = middleware.blockTextSetIcon(command)
+    ): Payload {
+        Log.v("BlockMiddleware", "setTextIcon")
+        Log.v("BlockMiddleware", "command: $command")
+        val update = middleware.blockTextSetIcon(command)
+        Log.v("BlockMiddleware", "update: $update")
+        return update
+    }
 
     override suspend fun updateTextColor(
         command: Command.UpdateTextColor

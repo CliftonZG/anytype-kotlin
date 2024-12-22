@@ -178,6 +178,8 @@ class BlockViewDiffUtil(
                 changes.add(LATEX_CHANGED)
             if (newBlock.background != oldBlock.background)
                 changes.add(BACKGROUND_COLOR_CHANGED)
+            if (newBlock.text != oldBlock.text)
+                changes.add(LATEX_CHANGED)
         }
 
         if (newBlock is BlockView.TableOfContents && oldBlock is BlockView.TableOfContents) {
@@ -330,6 +332,7 @@ class BlockViewDiffUtil(
 
         fun markupChanged() = changes.contains(MARKUP_CHANGED)
         fun textChanged() = changes.contains(TEXT_CHANGED)
+        fun latexChanged() = changes.contains(LATEX_CHANGED)
         fun textColorChanged() = changes.contains(TEXT_COLOR_CHANGED)
         fun focusChanged() = changes.contains(FOCUS_CHANGED)
         fun backgroundColorChanged() = changes.contains(BACKGROUND_COLOR_CHANGED)

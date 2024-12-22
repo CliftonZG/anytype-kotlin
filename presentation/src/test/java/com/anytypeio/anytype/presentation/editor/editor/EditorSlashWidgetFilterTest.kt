@@ -217,7 +217,8 @@ class EditorSlashWidgetFilterTest : EditorPresentationTestSetup() {
             actionsItems = emptyList(),
             alignmentItems = emptyList(),
             colorItems = emptyList(),
-            backgroundItems = emptyList()
+            backgroundItems = emptyList(),
+            embedItems = emptyList()
         )
         assertEquals(expected = expected, actual = command)
     }

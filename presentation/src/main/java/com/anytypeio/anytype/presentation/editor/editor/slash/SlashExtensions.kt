@@ -48,6 +48,7 @@ object SlashExtensions {
     fun getSlashWidgetMainItems() = listOf(
         SlashItem.Main.Style,
         SlashItem.Main.Media,
+        SlashItem.Main.Embed,
         SlashItem.Main.Objects,
         SlashItem.Main.Relations,
         SlashItem.Main.Other,
@@ -93,6 +94,15 @@ object SlashExtensions {
         SlashItem.Media.Video,
         SlashItem.Media.Bookmark,
         SlashItem.Media.Code
+    )
+
+    fun getSlashWidgetEmbedItems() = listOf(
+        SlashItem.Embed.Latex,
+        SlashItem.Embed.File,
+        SlashItem.Embed.Picture,
+        SlashItem.Embed.Video,
+        SlashItem.Embed.Bookmark,
+        SlashItem.Embed.Code,
     )
 
     fun getSlashWidgetOtherItems() = listOf(
@@ -178,6 +188,11 @@ object SlashExtensions {
             subheading = SlashItem.Subheader.Media.getSearchName(),
             items = getSlashWidgetMediaItems()
         )
+        val filteredEmbed = filterSlashItems(
+            filter = filter,
+            subheading = SlashItem.Subheader.Embed.getSearchName(),
+            items = getSlashWidgetEmbedItems()
+        )
         val filteredActions = filterSlashItems(
             filter = filter,
             subheading = SlashItem.Subheader.Actions.getSearchName(),
@@ -212,6 +227,7 @@ object SlashExtensions {
         return SlashWidgetState.UpdateItems.empty().copy(
             styleItems = filteredStyle,
             mediaItems = filteredMedia,
+            embedItems = filteredEmbed,
             objectItems = filteredObjects,
             relationItems = filteredRelations,
             otherItems = filteredOther,
@@ -347,6 +363,7 @@ object SlashExtensions {
                 is SlashItem.Color.Background -> listOf(SlashItem.Subheader.Background) + items
                 is SlashItem.Color.Text -> listOf(SlashItem.Subheader.Color) + items
                 is SlashItem.Media -> listOf(SlashItem.Subheader.Media) + items
+                is SlashItem.Embed -> listOf(SlashItem.Subheader.Embed) + items
                 is SlashItem.ObjectType -> listOf(SlashItem.Subheader.ObjectType) + items
                 is SlashItem.Other -> listOf(SlashItem.Subheader.Other) + items
                 is SlashItem.Style -> listOf(SlashItem.Subheader.Style) + items

@@ -29,6 +29,7 @@ class EditorLatexBlockTest : EditorPresentationTestSetup() {
     fun setup() {
         MockitoAnnotations.openMocks(this)
         proceedWithDefaultBeforeTestStubbing()
+        stubInterceptEvents()
     }
 
     val title = Block(
@@ -61,7 +62,8 @@ class EditorLatexBlockTest : EditorPresentationTestSetup() {
             fields = Block.Fields.empty(),
             children = emptyList(),
             content = Block.Content.Latex(
-                latex = MockDataFactory.randomString()
+                latex = MockDataFactory.randomString(),
+                text = MockDataFactory.randomString(),
             )
         )
 
@@ -98,6 +100,7 @@ class EditorLatexBlockTest : EditorPresentationTestSetup() {
                             id = latex.id,
                             isSelected = false,
                             latex = latex.content<Block.Content.Latex>().latex,
+                            text = latex.content<Block.Content.Latex>().text,
                             indent = 0
                         )
                     )
@@ -116,7 +119,8 @@ class EditorLatexBlockTest : EditorPresentationTestSetup() {
             fields = Block.Fields.empty(),
             children = emptyList(),
             content = Block.Content.Latex(
-                latex = MockDataFactory.randomString()
+                latex = MockDataFactory.randomString(),
+                text = MockDataFactory.randomString(),
             )
         )
 
@@ -168,6 +172,7 @@ class EditorLatexBlockTest : EditorPresentationTestSetup() {
                             id = latex.id,
                             isSelected = false,
                             latex = latex.content<Block.Content.Latex>().latex,
+                            text = latex.content<Block.Content.Latex>().text,
                             indent = 1
                         )
                     )

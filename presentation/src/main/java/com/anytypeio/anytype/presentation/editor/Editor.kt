@@ -111,7 +111,9 @@ interface Editor {
     class Proxer(
         val intents: Proxy.Intents = Proxy.Intents(),
         val changes: Proxy.Text.Changes = Proxy.Text.Changes(),
+        val latexChanges: Proxy.Latex.Changes = Proxy.Latex.Changes(),
         val saves: Proxy.Text.Saves = Proxy.Text.Saves(),
+        val latexSaves: Proxy.Latex.Saves = Proxy.Latex.Saves(),
         val payloads: Proxy.Payloads = Proxy.Payloads(),
         val errors: Proxy.Error = Proxy.Error(),
         val toasts: Proxy.Toast = Proxy.Toast()

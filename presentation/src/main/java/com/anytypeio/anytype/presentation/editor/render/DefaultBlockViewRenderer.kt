@@ -1,5 +1,6 @@
 package com.anytypeio.anytype.presentation.editor.render
 
+import android.util.Log
 import com.anytypeio.anytype.core_models.Block
 import com.anytypeio.anytype.core_models.Block.Content
 import com.anytypeio.anytype.core_models.Id
@@ -56,6 +57,10 @@ class DefaultBlockViewRenderer @Inject constructor(
     private val fieldParser: FieldParser,
     private val resourceProvider: ResourceProvider
 ) : BlockViewRenderer, ToggleStateHolder by toggleStateHolder {
+
+    init {
+        Log.v("DefaultBlockViewRenderer", "initialized")
+    }
 
     override suspend fun Map<Id, List<Block>>.render(
         mode: EditorMode,
@@ -715,15 +720,33 @@ class DefaultBlockViewRenderer @Inject constructor(
                     }
                 }
                 is Content.Latex -> {
+                    Log.v("DefaultBlockViewRenderer", "Content.Latex")
+                    Log.v("DefaultBlockViewRenderer", "mode: $mode")
+                    Log.v("DefaultBlockViewRenderer", "mode: $mode")
+                    Log.v("DefaultBlockViewRenderer", "mode: $mode")
+                    Log.v("DefaultBlockViewRenderer", "content: $content")
+                    Log.v("DefaultBlockViewRenderer", "block: $mode")
+                    Log.v("DefaultBlockViewRenderer", "focus: $focus")
+                    Log.v("DefaultBlockViewRenderer", "selection: $selection")
                     isPreviousBlockMedia = false
                     mCounter = 0
+                    val blockDecorationScheme = buildNestedDecorationData(
+                        block = block,
+                        parentScheme = parentScheme,
+                        currentDecoration = DecorationData(
+                            background = block.parseThemeBackgroundColor()
+                        )
+                    )
+                    Log.v("DefaultBlockViewRenderer", "schema: $blockDecorationScheme")
                     result.add(
                         latex(
-                            block = block,
+                            mode = mode,
                             content = content,
+                            block = block,
+                            focus = focus,
                             indent = indent,
                             selection = selection,
-                            mode = mode
+                            schema = blockDecorationScheme
                         )
                     )
                 }
@@ -1941,19 +1964,25 @@ class DefaultBlockViewRenderer @Inject constructor(
     private fun latex(
         block: Block,
         content: Content.Latex,
+        focus: Focus,
         indent: Int,
         mode: EditorMode,
-        selection: Set<Id>
-    ) = BlockView.Latex(
+        selection: Set<Id>,
+        schema: NestedDecorationData
+    ): BlockView.Latex = BlockView.Latex(
+        mode = if (mode == EditorMode.Edit) BlockView.Mode.EDIT else BlockView.Mode.READ,
         id = block.id,
         indent = indent,
-        latex = content.latex,
+        text = content.text,
         background = block.parseThemeBackgroundColor(),
+        isFocused = resolveIsFocused(focus, block),
         isSelected = checkIfSelected(
             mode = mode,
             block = block,
             selection = selection
-        )
+        ),
+        decorations = schema.toBlockViewDecoration(block),
+        latex = content.text
     )
 
     private fun toc(

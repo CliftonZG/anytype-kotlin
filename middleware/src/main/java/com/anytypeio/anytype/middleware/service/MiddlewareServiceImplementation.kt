@@ -1,5 +1,6 @@
 package com.anytypeio.anytype.middleware.service
 
+import android.util.Log
 import anytype.Rpc
 import com.anytypeio.anytype.core_models.exceptions.AccountIsDeletedException
 import com.anytypeio.anytype.core_models.exceptions.LoginException
@@ -17,6 +18,12 @@ import service.Service
 class MiddlewareServiceImplementation @Inject constructor(
     featureToggles: FeatureToggles
 ) : MiddlewareService {
+
+    init {
+        if (!featureToggles.isLogFromGoProcess) {
+            Service.setEnv("ANYTYPE_LOG_LEVEL", "*=fatal;anytype*=error")
+        }
+    }
 
     override fun accountCreate(request: Rpc.Account.Create.Request): Rpc.Account.Create.Response {
         val encoded = Service.accountCreate(Rpc.Account.Create.Request.ADAPTER.encode(request))
@@ -535,8 +542,22 @@ class MiddlewareServiceImplementation @Inject constructor(
         val encoded =
             Service.blockTextSetText(Rpc.BlockText.SetText.Request.ADAPTER.encode(request))
         val response = Rpc.BlockText.SetText.Response.ADAPTER.decode(encoded)
+        Log.v("MiddlewareServiceImplementation", "Response: $response")
         val error = response.error
         if (error != null && error.code != Rpc.BlockText.SetText.Response.Error.Code.NULL) {
+            throw Exception(error.description)
+        } else {
+            return response
+        }
+    }
+
+    override fun blockLatexSetLatex(request: Rpc.BlockLatex.SetLatex.Request): Rpc.BlockLatex.SetLatex.Response {
+        val encoded =
+            Service.blockLatexSetText(Rpc.BlockLatex.SetLatex.Request.ADAPTER.encode(request))
+        val response = Rpc.BlockLatex.SetLatex.Response.ADAPTER.decode(encoded)
+        Log.v("MiddlewareServiceImplementation", "Response: $response")
+        val error = response.error
+        if (error != null && error.code != Rpc.BlockLatex.SetLatex.Response.Error.Code.NULL) {
             throw Exception(error.description)
         } else {
             return response

@@ -3,6 +3,7 @@ package com.anytypeio.anytype.middleware.mappers
 import anytype.ResponseEvent
 import anytype.Rpc
 import anytype.model.Account
+import anytype.model.Import
 import anytype.model.NameserviceNameType
 import anytype.model.ParticipantPermissions
 import anytype.model.Restrictions
@@ -221,7 +222,8 @@ fun List<MBlock>.toCoreModels(): List<Block> = mapNotNull { block ->
                     fields = block.toCoreModelsFields(),
                     children = block.childrenIds,
                     content = Block.Content.Latex(
-                        latex = block.latex?.text.orEmpty()
+                        latex = block.latex?.text.orEmpty(),
+                        text = block.latex?.text.orEmpty()
                     ),
                     backgroundColor = block.backgroundColor.ifEmpty { null }
                 )

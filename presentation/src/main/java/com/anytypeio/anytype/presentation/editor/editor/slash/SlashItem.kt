@@ -11,6 +11,7 @@ sealed class SlashWidgetState {
         val mainItems: List<SlashItem>,
         val styleItems: List<SlashItem>,
         val mediaItems: List<SlashItem>,
+        val embedItems: List<SlashItem>,
         val objectItems: List<SlashItem>,
         val relationItems: List<SlashRelationView>,
         val otherItems: List<SlashItem>,
@@ -24,6 +25,7 @@ sealed class SlashWidgetState {
                 mainItems = emptyList(),
                 styleItems = emptyList(),
                 mediaItems = emptyList(),
+                embedItems = emptyList(),
                 objectItems = emptyList(),
                 relationItems = emptyList(),
                 otherItems = emptyList(),
@@ -61,6 +63,16 @@ sealed class SlashItem {
 
         object MediaWithBack : Subheader() {
             override fun getSearchName(): String = SlashConst.SLASH_MAIN_MEDIA
+            override fun getAbbreviation(): List<String>? = null
+        }
+
+        object Embed : Subheader() {
+            override fun getSearchName(): String = SlashConst.SLASH_MAIN_EMBED
+            override fun getAbbreviation(): List<String>? = null
+        }
+
+        object EmbedWithBack : Subheader() {
+            override fun getSearchName(): String = SlashConst.SLASH_MAIN_EMBED
             override fun getAbbreviation(): List<String>? = null
         }
 
@@ -140,6 +152,11 @@ sealed class SlashItem {
 
         object Media : Main() {
             override fun getSearchName(): String = SlashConst.SLASH_MAIN_MEDIA
+            override fun getAbbreviation(): List<String>? = null
+        }
+
+        object Embed : Main() {
+            override fun getSearchName(): String = SlashConst.SLASH_MAIN_EMBED
             override fun getAbbreviation(): List<String>? = null
         }
 
@@ -291,6 +308,43 @@ sealed class SlashItem {
 
         object Code : Media() {
             override fun getSearchName(): String = SlashConst.SLASH_MEDIA_CODE
+            override fun getAbbreviation(): List<String>? = null
+        }
+    }
+    //endregion
+
+    //region EMBED
+    sealed class Embed : SlashItem() {
+        object Latex : Embed() {
+            override fun getSearchName(): String = SlashConst.SLASH_EMBED_LATEX
+            override fun getAbbreviation(): List<String>? = null
+        }
+
+        object File : Embed() {
+            override fun getSearchName(): String = SlashConst.SLASH_EMBED_FILE
+            override fun getAbbreviation(): List<String>? = null
+        }
+
+        object Picture : Embed() {
+            override fun getSearchName(): String = SlashConst.SLASH_EMBED_PICTURE
+            override fun getAbbreviation(): List<String> = listOf(
+                SlashConst.SLASH_EMBED_PICTURE,
+                SlashConst.SLASH_EMBED_IMAGE
+            )
+        }
+
+        object Video : Embed() {
+            override fun getSearchName(): String = SlashConst.SLASH_EMBED_VIDEO
+            override fun getAbbreviation(): List<String>? = null
+        }
+
+        object Bookmark : Embed() {
+            override fun getSearchName(): String = SlashConst.SLASH_EMBED_BOOKMARK
+            override fun getAbbreviation(): List<String>? = null
+        }
+
+        object Code : Embed() {
+            override fun getSearchName(): String = SlashConst.SLASH_EMBED_CODE
             override fun getAbbreviation(): List<String>? = null
         }
     }

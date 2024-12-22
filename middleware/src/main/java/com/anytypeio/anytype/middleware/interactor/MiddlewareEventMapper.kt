@@ -37,6 +37,15 @@ fun anytype.Event.Message.toCoreModels(
             imageIcon = event.iconImage?.value_,
         )
     }
+    blockSetLatex != null -> {
+        val event = blockSetLatex
+        checkNotNull(event)
+        Event.Command.GranularChange(
+            context = context,
+            id = event.id,
+            text = event.text?.value_,
+        )
+    }
     blockSetBackgroundColor != null -> {
         val event = blockSetBackgroundColor
         checkNotNull(event)

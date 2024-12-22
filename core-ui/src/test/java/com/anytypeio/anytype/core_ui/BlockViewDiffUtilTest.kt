@@ -1016,11 +1016,13 @@ class BlockViewDiffUtilTest {
             id = MockDataFactory.randomUuid(),
             isSelected = MockDataFactory.randomBoolean(),
             latex = MockDataFactory.randomString(),
+            text = MockDataFactory.randomString(),
             indent = MockDataFactory.randomInt()
         )
 
         val newBlock: BlockView = oldBlock.copy(
-            latex = MockDataFactory.randomString()
+            latex = MockDataFactory.randomString(),
+            text = MockDataFactory.randomString()
         )
 
         val old = listOf(oldBlock)

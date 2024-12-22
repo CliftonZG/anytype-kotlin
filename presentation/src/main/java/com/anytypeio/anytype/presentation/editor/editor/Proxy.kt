@@ -1,6 +1,7 @@
 package com.anytypeio.anytype.presentation.editor.editor
 
 import com.anytypeio.anytype.core_models.Payload
+import com.anytypeio.anytype.presentation.editor.model.LatexUpdate
 import com.anytypeio.anytype.presentation.editor.model.TextUpdate
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -33,6 +34,11 @@ interface Proxy<T> {
     sealed class Text : Subject<TextUpdate?>() {
         class Changes : Text()
         class Saves : Text()
+    }
+
+    sealed class Latex : Subject<LatexUpdate?>() {
+        class Changes : Latex()
+        class Saves : Latex()
     }
 
     class Intents : Subject<Intent>()

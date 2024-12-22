@@ -29,6 +29,7 @@ import com.anytypeio.anytype.core_utils.ui.BaseBottomSheetImeOffsetFragment
 import com.anytypeio.anytype.databinding.FragmentSetBlockTextValueBinding
 import com.anytypeio.anytype.di.common.componentManager
 import com.anytypeio.anytype.di.feature.DefaultComponentParam
+import com.anytypeio.anytype.presentation.editor.editor.model.BlockView
 import com.anytypeio.anytype.presentation.objects.block.SetBlockTextValueViewModel
 import com.anytypeio.anytype.ui.editor.OnFragmentInteractionListener
 import java.util.*
@@ -50,6 +51,14 @@ class SetBlockTextValueFragment :
             restore = LinkedList(),
             initialBlock = mutableListOf(),
             onTextChanged = { _, _ -> },
+            onLatexChanged = { _, _ -> },
+            onLatexBlockTextChanged = { block ->
+                vm.onTextBlockTextChanged(
+                    textBlock = block,
+                    cellId = this.block,
+                    tableId = table,
+                    ctx = ctx
+                ) },
             onTitleBlockTextChanged = { _, _ -> },
             onSelectionChanged = { _, _ -> },
             onCheckboxClicked = {},

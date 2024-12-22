@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Build.VERSION_CODES.N
 import android.os.Build.VERSION_CODES.N_MR1
 import android.text.Editable
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
@@ -22,6 +23,7 @@ import com.anytypeio.anytype.core_ui.features.editor.decoration.EditorDecoration
 import com.anytypeio.anytype.core_ui.tools.DefaultTextWatcher
 import com.anytypeio.anytype.core_ui.widgets.text.CodeTextInputWidget
 import com.anytypeio.anytype.core_utils.ext.imm
+import com.anytypeio.anytype.core_utils.text.BackspaceKeyDetector
 import com.anytypeio.anytype.library_syntax_highlighter.Syntaxes
 import com.anytypeio.anytype.presentation.editor.editor.listener.ListenerType
 import com.anytypeio.anytype.presentation.editor.editor.model.BlockView
@@ -61,14 +63,18 @@ class Code(
         clicked: (ListenerType) -> Unit,
         onTextInputClicked: (String) -> Unit
     ) {
+        Log.v("CodeClass", "bind!!!!!!!!!!!!!!!!!!!!!!")
         indentize(item)
         if (item.mode == BlockView.Mode.READ) {
             content.setText(item.text)
             content.enableReadMode()
             select(item)
             setBackgroundColor(item.background)
+            Log.v("CodeClass", "code block text field reading")
         } else {
             content.enableEditMode()
+
+            Log.v("CodeClass", "code block text field editing")
 
             select(item)
 
@@ -93,6 +99,9 @@ class Code(
                 if (Build.VERSION.SDK_INT == N || Build.VERSION.SDK_INT == N_MR1) {
                     if (focused) {
                         imm().showSoftInput(content, InputMethodManager.SHOW_FORCED)
+                        Log.v("CodeClass", "focused")
+                    } else {
+                        Log.v("CodeClass", "not focused")
                     }
                 }
             }
@@ -103,6 +112,7 @@ class Code(
         }
 
         content.setOnClickListener {
+            Timber.d("CodeClass, onTextInputClicked")
             onTextInputClicked(item.id)
             if (Build.VERSION.SDK_INT == N || Build.VERSION.SDK_INT == N_MR1) {
                 content.context.imm().showSoftInput(content, InputMethodManager.SHOW_FORCED)
@@ -134,6 +144,8 @@ class Code(
         onTextChanged: (String, Editable) -> Unit,
         onSelectionChanged: (String, IntRange) -> Unit,
     ) = payloads.forEach { payload ->
+
+        Log.v("code", "$payload")
 
         Timber.d("Processing $payload for new view:\n$item")
 
@@ -186,13 +198,16 @@ class Code(
     fun setFocus(item: Focusable) {
         if (item.isFocused) {
             focus()
+            Log.v("code", "setting focus")
         } else {
             content.clearFocus()
+            Log.v("code", "clearing focus")
         }
     }
 
     fun focus() {
         Timber.d("Requesting focus")
+        Log.v("code", "requesting focus")
         content.apply {
             post {
                 if (!hasFocus()) {
@@ -200,9 +215,11 @@ class Code(
                         context.imm().showSoftInput(this, InputMethodManager.SHOW_FORCED)
                     } else {
                         Timber.d("Couldn't gain focus")
+                        Log.v("code", "Couldn't gain focus")
                     }
                 } else {
                     Timber.d("Already had focus")
+                    Log.v("code", "Already had focus")
                 }
             }
         }
@@ -211,6 +228,7 @@ class Code(
     private fun setCursor(item: BlockView.Code) {
         if (item.isFocused) {
             Timber.d("Setting cursor: $item")
+            Log.v("code", "Setting cursor: $item")
             item.cursor?.let {
                 val length = content.text?.length ?: 0
                 if (it in 0..length) {
@@ -228,6 +246,21 @@ class Code(
                 content.context.resources.getColor(R.color.shape_tertiary, null)
             (binding.content.background as? ColorDrawable)?.color = defaultBackgroundColor
         }
+    }
+
+    fun enableBackspaceDetector(
+        onEmptyBlockBackspaceClicked: () -> Unit,
+        onNonEmptyBlockBackspaceClicked: () -> Unit
+    ) {
+        content.setOnKeyListener(
+            BackspaceKeyDetector {
+                if (content.text.toString().isEmpty()) {
+                    onEmptyBlockBackspaceClicked()
+                } else {
+                    onNonEmptyBlockBackspaceClicked()
+                }
+            }
+        )
     }
 
     override fun applyDecorations(decorations: List<BlockView.Decoration>) {

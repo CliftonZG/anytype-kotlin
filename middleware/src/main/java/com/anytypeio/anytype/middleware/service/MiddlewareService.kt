@@ -387,6 +387,9 @@ interface MiddlewareService {
 
     //endregion
 
+    @Throws(Exception::class)
+    fun blockLatexSetLatex(request: Rpc.BlockLatex.SetLatex.Request): Rpc.BlockLatex.SetLatex.Response
+
     //region LINK BLOCK commands
 
     @Throws(Exception::class)

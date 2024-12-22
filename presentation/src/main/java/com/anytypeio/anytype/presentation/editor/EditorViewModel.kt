@@ -1,6 +1,7 @@
 package com.anytypeio.anytype.presentation.editor
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.anytypeio.anytype.analytics.base.Analytics
@@ -61,6 +62,7 @@ import com.anytypeio.anytype.core_utils.ext.cancel
 import com.anytypeio.anytype.core_utils.ext.isEndLineClick
 import com.anytypeio.anytype.core_utils.ext.replace
 import com.anytypeio.anytype.core_utils.ext.switchToLatestFrom
+import com.anytypeio.anytype.core_utils.ext.toast
 import com.anytypeio.anytype.core_utils.ext.withLatestFrom
 import com.anytypeio.anytype.core_utils.tools.FeatureToggles
 import com.anytypeio.anytype.core_utils.tools.toPrettyString
@@ -144,6 +146,7 @@ import com.anytypeio.anytype.presentation.editor.editor.ext.toEditMode
 import com.anytypeio.anytype.presentation.editor.editor.ext.toReadMode
 import com.anytypeio.anytype.presentation.editor.editor.ext.update
 import com.anytypeio.anytype.presentation.editor.editor.ext.updateCursorAndEditMode
+import com.anytypeio.anytype.presentation.editor.editor.ext.updateLatexViews
 import com.anytypeio.anytype.presentation.editor.editor.ext.updateSelection
 import com.anytypeio.anytype.presentation.editor.editor.ext.updateTableOfContentsViews
 import com.anytypeio.anytype.presentation.editor.editor.items
@@ -183,10 +186,12 @@ import com.anytypeio.anytype.presentation.editor.editor.table.EditorTableDelegat
 import com.anytypeio.anytype.presentation.editor.editor.table.EditorTableEvent
 import com.anytypeio.anytype.presentation.editor.editor.table.SimpleTableWidgetItem
 import com.anytypeio.anytype.presentation.editor.editor.toCoreModel
+import com.anytypeio.anytype.presentation.editor.editor.updateLatex
 import com.anytypeio.anytype.presentation.editor.editor.updateText
 import com.anytypeio.anytype.presentation.editor.model.EditorDatePickerState
 import com.anytypeio.anytype.presentation.editor.model.EditorFooter
 import com.anytypeio.anytype.presentation.editor.model.OnEditorDatePickerEvent
+import com.anytypeio.anytype.presentation.editor.model.LatexUpdate
 import com.anytypeio.anytype.presentation.editor.model.TextUpdate
 import com.anytypeio.anytype.presentation.editor.picker.PickerListener
 import com.anytypeio.anytype.presentation.editor.render.BlockViewRenderer
@@ -281,6 +286,7 @@ import com.anytypeio.anytype.presentation.util.CopyFileToCacheDirectory
 import com.anytypeio.anytype.presentation.util.CopyFileToCacheStatus
 import com.anytypeio.anytype.presentation.util.Dispatcher
 import java.util.LinkedList
+import java.util.Locale
 import java.util.Queue
 import java.util.regex.Pattern
 import kotlinx.coroutines.Job
@@ -444,6 +450,7 @@ class EditorViewModel(
         proceedWithObservingPermissions()
         proceedWithObservingProfileIcon()
         startHandlingTextChanges()
+        startHandlingLatexChanges()
         startProcessingFocusChanges()
         startProcessingControlPanelViewState()
         startObservingPayload()
@@ -1034,13 +1041,16 @@ class EditorViewModel(
             .onEach { update ->
                 val updated = blocks.map { block ->
                     if (block.id == update.target) {
+                        Log.v("EditorViewModel", "startHandlingTextChanges, onEach: $update")
                         block.updateText(update)
                     } else
+                        Log.v("EditorViewModel", "startHandlingTextChanges, onEach: no update")
                         block
                 }
                 orchestrator.stores.document.update(updated)
             }
             .map { update ->
+                Log.v("EditorViewModel", "startHandlingTextChanges, map: $update")
                 Intent.Text.UpdateText(
                     context = context,
                     target = update.target,
@@ -1049,13 +1059,62 @@ class EditorViewModel(
                 )
             }
             .onEach { params ->
+                Log.v("EditorViewModel", "startHandlingTextChanges, map: $params")
                 proceedWithUpdatingText(params)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun startHandlingLatexChanges() {
+        orchestrator
+            .proxies
+            .latexChanges
+            .stream()
+            .filterNotNull()
+            .onEach { update -> orchestrator.latexInteractor.consume(update, context) }
+            .launchIn(viewModelScope)
+
+        orchestrator
+            .proxies
+            .latexSaves
+            .stream()
+            .filterNotNull()
+            .onEach { update ->
+                val updated = blocks.map { block ->
+                    if (block.id == update.target) {
+                        Log.v("EditorViewModel", "startHandlingLatexChanges, onEach: $update")
+                        block.updateLatex(update)
+                    } else
+                        Log.v("EditorViewModel", "startHandlingLatexChanges, onEach: no update")
+                    block
+                }
+                orchestrator.stores.document.update(updated)
+            }
+            .map { update ->
+                Log.v("EditorViewModel", "startHandlingLatexChanges, map: $update")
+                Intent.Embed.UpdateLatex(
+                    context = context,
+                    target = update.target,
+                    text = update.text
+                )
+            }
+            .onEach { params ->
+                Log.v("EditorViewModel", "startHandlingLatexChanges, map: $params")
+                proceedWithUpdatingLatex(params)
             }
             .launchIn(viewModelScope)
     }
 
     private fun proceedWithUpdatingText(intent: Intent.Text.UpdateText) {
         viewModelScope.launch {
+            Log.v("EditorViewModel", "proceedWithUpdatingText, intent: $intent")
+            orchestrator.proxies.intents.send(intent)
+        }
+    }
+
+    private fun proceedWithUpdatingLatex(intent: Intent.Embed.UpdateLatex) {
+        viewModelScope.launch {
+            Log.v("EditorViewModel", "proceedWithUpdatingLatex, intent: $intent")
             orchestrator.proxies.intents.send(intent)
         }
     }
@@ -1138,6 +1197,7 @@ class EditorViewModel(
 
     //TODO need refactoring, logic must depend on Object Layouts
     private fun onStartFocusing(payload: Payload) {
+        Timber.d("EditorViewModel, onStartFocusing")
         val event = payload.events.find { it is Event.Command.ShowObject }
         if (event is Event.Command.ShowObject) {
             val root = event.blocks.find { it.id == context }
@@ -1306,8 +1366,21 @@ class EditorViewModel(
         marks: List<Content.Text.Mark>
     ) {
         Timber.d("onTextChanged, id:[$id], text:[$text], marks:[$marks]")
+        Log.v("EditorViewModel", "onTextChanged, id:[$id], text:[$text]")
         val update = TextUpdate.Default(target = id, text = text, markup = marks)
         viewModelScope.launch { orchestrator.proxies.changes.send(update) }
+    }
+
+    @Deprecated("replace by onTextBlockTextChanged")
+    fun onLatexChanged(
+        id: String,
+        text: String,
+    ) {
+        Log.v("latex", "ONLATEXCHANGED")
+        Timber.d("onLatexChanged, id:[$id], text:[$text]")
+        Log.v("EditorViewModel", "onLatexChanged, id:[$id], text:[$text]")
+        val update = LatexUpdate.Default(target = id, text = text)
+        viewModelScope.launch { orchestrator.proxies.latexChanges.send(update) }
     }
 
     fun onTitleBlockTextChanged(id: Id, text: String) {
@@ -1365,6 +1438,33 @@ class EditorViewModel(
             } else {
                 store.update(new)
             }
+        }
+
+        viewModelScope.launch { orchestrator.proxies.changes.send(update) }
+        sendHideTypesWidgetEvent()
+    }
+
+    fun onLatexBlockTextChanged(view: BlockView.Latex) {
+        Timber.d("onLatexBlockTextChanged, view:[$view]")
+        Log.v("EditorViewModel", "latex")
+
+        val update = TextUpdate.Pattern(
+            target = view.id,
+            text = view.text,
+            markup = emptyList()
+        )
+
+        Log.v("EditorViewModel", "update text: ${update.text}")
+        Log.v("EditorViewModel", "update target: ${update.target}")
+
+        val store = orchestrator.stores.views
+        val old = store.current()
+        val new = old.map { if (it.id == view.id) view else it }
+
+        viewModelScope.launch {
+            store.update(new)
+            store.update(new.updateLatexViews(view))
+            renderCommand.send(Unit)
         }
 
         viewModelScope.launch { orchestrator.proxies.changes.send(update) }
@@ -1561,7 +1661,7 @@ class EditorViewModel(
         } else {
             proceedWithCreatingNewTextBlock(
                 target = id,
-                style = Content.Text.Style.P
+                style = Content.Text.Style.P,
             )
         }
     }
@@ -1779,6 +1879,7 @@ class EditorViewModel(
     }
 
     private fun proceedWithEnteringActionMode(target: Id, scrollTarget: Boolean = true) {
+        Timber.d("EditorViewModel, proceedWithEnteringActionMode")
         val views = orchestrator.stores.views.current()
         val view = views.find { it.id == target }
 
@@ -1850,6 +1951,7 @@ class EditorViewModel(
     }
 
     private suspend fun updateSelectionUI(views: List<BlockView>) {
+        Timber.d("EditorViewModel, updateSelectedUI")
         orchestrator.stores.focus.update(Editor.Focus.empty())
         orchestrator.stores.views.update(
             views.enterSAM(targets = currentSelection())
@@ -1883,6 +1985,7 @@ class EditorViewModel(
 
 
     private fun proceedWithUpdatingActionsForCurrentSelection() {
+        Timber.d("EditorViewModel, proceedWithUpdatingActionsForCurrentSelection")
         val isMultiMode = currentSelection().size > 1
 
         val targetActions = mutableListOf<ActionItemType>().apply {
@@ -1949,6 +2052,7 @@ class EditorViewModel(
                         excludedActions.add(ActionItemType.Download)
                     }
                     is Content.Latex -> {
+                        Timber.d("EditorViewModel, latex!!! need help!W!")
                         excludedActions.add(ActionItemType.Download)
                     }
                     is Content.Text -> {
@@ -2444,6 +2548,47 @@ class EditorViewModel(
         }
     }
 
+    fun onLatexBlockClicked() {
+
+        Timber.d("onAddLatexBlockClicked")
+
+        val focused = orchestrator.stores.focus.current().targetOrNull()
+
+        val target = if (focused != null)
+            blocks.find { it.id == focused }
+        else
+            null
+
+        val content = target?.content ?: return
+
+        if (content is Content.Latex && content.text.isEmpty()) {
+            viewModelScope.launch {
+                orchestrator.proxies.intents.send(
+                    Intent.CRUD.Replace(
+                        context = context,
+                        target = target.id,
+                        prototype = Prototype.Latex()
+                    )
+                )
+                Log.v("latex", "intent.crud.replace")
+            }
+        } else {
+            viewModelScope.launch {
+                orchestrator.proxies.intents.send(
+                    Intent.CRUD.Create(
+                        context = vmParams.ctx,
+                        target = target.id,
+                        position = Position.BOTTOM,
+                        prototype = Prototype.Latex()
+                    )
+                )
+            }
+            Log.v("latex", "proceedWithCreatingNewTextBlock")
+        }
+
+        controlPanelInteractor.onEvent(ControlPanelMachine.Event.OnAddBlockToolbarOptionSelected)
+    }
+
     private fun proceedWithCreatingEmptyFileBlock(
         id: String,
         type: Content.File.Type,
@@ -2699,6 +2844,7 @@ class EditorViewModel(
      * Closing style-toolbar and its dependent toolbars (color, extra). Back to edit mode.
      */
     private fun onExitBlockStyleToolbarClicked() {
+        Timber.d("EditorViewModel, onExitBlockStyleToolbarClicked")
         if (mode is EditorMode.Styling.Single) {
             val target = (mode as EditorMode.Styling.Single).target
             val cursor = (mode as EditorMode.Styling.Single).cursor
@@ -2797,6 +2943,7 @@ class EditorViewModel(
     }
 
     private fun onExitActionMode() {
+        Timber.d("EditorViewModel, onExitActionMode")
         mode = EditorMode.Edit
         controlPanelInteractor.onEvent(ControlPanelMachine.Event.ReadMode.OnExit)
         viewModelScope.launch { refresh() }
@@ -2852,6 +2999,11 @@ class EditorViewModel(
         action: (() -> Unit)? = null,
         errorAction: (() -> Unit)? = null
     ) {
+        Timber.d("EditorViewModel, proceedUpdateBlockStyle")
+        Timber.d("EditorViewModel, targets: $targets")
+        Timber.d("EditorViewModel, uiBlock: $uiBlock")
+        Timber.d("EditorViewModel, action: $action")
+        Timber.d("EditorViewModel, errorAction: $errorAction")
         when (uiBlock) {
             UiBlock.TEXT, UiBlock.HEADER_ONE,
             UiBlock.HEADER_TWO, UiBlock.HEADER_THREE,
@@ -3155,6 +3307,10 @@ class EditorViewModel(
                 is Content.TableOfContents -> {
                     addNewBlockAtTheEnd()
                 }
+                is Content.Latex -> {
+                    Timber.d("EditorViewModel, onOutsideClicked: Latex")
+                    addNewBlockAtTheEnd()
+                }
                 else -> {
                     Timber.d("Outside-click has been ignored.")
                 }
@@ -3188,6 +3344,7 @@ class EditorViewModel(
     }
 
     private fun onPageClicked(blockLinkId: Id) {
+        Timber.d("EditorViewModel, onPageClicked")
         if (isObjectTemplate()) return
         val block = blocks.firstOrNull { it.id == blockLinkId }
         when (val content = block?.content) {
@@ -4012,10 +4169,24 @@ class EditorViewModel(
                     else -> Unit
                 }
             }
-            is ListenerType.Latex -> {
+            is ListenerType.Latex.SelectLatexTemplate -> {
                 when (mode) {
-//                    EditorMode.Edit -> proceedWithEnteringActionMode(clicked.id)
-                    EditorMode.Select -> onBlockMultiSelectClicked(clicked.id)
+                    EditorMode.Edit -> {
+                        Log.v("EditorViewModel", "onClickListener, ListenerType.Latex.SelectLatexTemplate")
+                        dispatch(Command.Dialog.SelectLatexTemplate(clicked.template))
+                    }
+//                  EditorMode.Edit -> proceedWithEnteringActionMode(clicked.id)
+                    // EditorMode.Select -> onBlockMultiSelectClicked(clicked.id)
+                    else -> Unit
+                }
+            }
+            is ListenerType.Latex.EnableEditMode -> {
+                when (mode) {
+                    EditorMode.Edit -> {
+                        Log.v("EditorViewModel", "onClickListener, ListenerType.Latex.EnableEditMode")
+                    }
+//                  EditorMode.Edit -> proceedWithEnteringActionMode(clicked.id)
+                    // EditorMode.Select -> onBlockMultiSelectClicked(clicked.id)
                     else -> Unit
                 }
             }
@@ -4649,6 +4820,24 @@ class EditorViewModel(
         }
     }
 
+    fun onSelectLatexTemplateClicked(target: Id, key: String, value: String) {
+        Timber.d("onSelectLatexTemplateClicked, target:[$target] key:[$key]")
+        Timber.d("onSelectLatexTemplateClicked, ${mapOf("template" to key)}")
+        viewModelScope.launch {
+            val update = LatexUpdate.Default(target = target, text = value)
+            Timber.d("onSelectLatexTemplateClicked, ${update}")
+            orchestrator.proxies.latexChanges.send(update)
+            orchestrator.proxies.intents.send(
+                Intent.CRUD.Replace(
+                    context = context,
+                    target = target,
+                    prototype = Prototype.Latex(text = value)
+
+                )
+            )
+        }
+    }
+
     fun onRelationTextValueChanged(
         ctx: Id,
         value: Any?,
@@ -4951,6 +5140,15 @@ class EditorViewModel(
                     )
                 )
             }
+            is SlashItem.Main.Embed -> {
+                val items =
+                    listOf(SlashItem.Subheader.EmbedWithBack) + SlashExtensions.getSlashWidgetEmbedItems()
+                onSlashWidgetStateChanged(
+                    SlashWidgetState.UpdateItems.empty().copy(
+                        embedItems = items
+                    )
+                )
+            }
             is SlashItem.Main.Relations -> {
                 getRelations { proceedWithRelations(it) }
             }
@@ -5063,6 +5261,17 @@ class EditorViewModel(
                 )
                 controlPanelInteractor.onEvent(ControlPanelMachine.Event.Slash.OnStopAndClearFocus)
                 onSlashMediaItemClicked(item = item)
+            }
+            is SlashItem.Embed -> {
+                // TODO join cutting and block creation operations and merge its payload changes
+                // TODO unify focus handling
+                cutSlashFilter(
+                    targetId = targetId,
+                    setPendingCursor = false,
+                    clearFocusFromView = true
+                )
+                controlPanelInteractor.onEvent(ControlPanelMachine.Event.Slash.OnStopAndClearFocus)
+                onSlashEmbedItemClicked(item = item)
             }
             is SlashItem.ObjectType -> {
                 cutSlashFilter(targetId = targetId)
@@ -5404,6 +5613,29 @@ class EditorViewModel(
                 onAddFileBlockClicked(Content.File.Type.IMAGE)
             }
             SlashItem.Media.Video -> {
+                onAddFileBlockClicked(Content.File.Type.VIDEO)
+            }
+        }
+    }
+
+    private fun onSlashEmbedItemClicked(item: SlashItem.Embed) {
+        when (item) {
+            SlashItem.Embed.Latex -> {
+                onLatexBlockClicked()
+            }
+            SlashItem.Embed.Bookmark -> {
+                onAddBookmarkBlockClicked()
+            }
+            SlashItem.Embed.Code -> {
+                onAddTextBlockClicked(style = Content.Text.Style.CODE_SNIPPET)
+            }
+            SlashItem.Embed.File -> {
+                onAddFileBlockClicked(Content.File.Type.FILE)
+            }
+            SlashItem.Embed.Picture -> {
+                onAddFileBlockClicked(Content.File.Type.IMAGE)
+            }
+            SlashItem.Embed.Video -> {
                 onAddFileBlockClicked(Content.File.Type.VIDEO)
             }
         }
@@ -6472,6 +6704,7 @@ class EditorViewModel(
     }
 
     private fun sendHideTypesWidgetEvent() {
+        Timber.d("EditorViewModel, sendHideTypesWidgetEvent")
         setTypesWidgetVisibility(false)
     }
 

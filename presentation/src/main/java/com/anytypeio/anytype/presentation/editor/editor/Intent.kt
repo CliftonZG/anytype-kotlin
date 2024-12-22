@@ -244,4 +244,12 @@ sealed class Intent {
             val targetIds: List<Id>
         ) : Table()
     }
+
+    sealed class Embed : Intent() {
+        class UpdateLatex(
+            val context: Id,
+            val target: Id,
+            val text: String,
+        ) : Embed()
+    }
 }

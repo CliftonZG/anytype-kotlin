@@ -6,6 +6,7 @@ import com.anytypeio.anytype.core_models.ext.addClickableMark
 import com.anytypeio.anytype.core_models.ext.addMark
 import com.anytypeio.anytype.core_models.ext.content
 import com.anytypeio.anytype.core_models.ext.sortByType
+import com.anytypeio.anytype.presentation.editor.model.LatexUpdate
 import com.anytypeio.anytype.presentation.editor.model.TextUpdate
 
 fun Block.updateText(update: TextUpdate): Block {
@@ -15,6 +16,14 @@ fun Block.updateText(update: TextUpdate): Block {
             marks = update.markup.filter {
                 it.range.first != it.range.last
             }
+        )
+    )
+}
+
+fun Block.updateLatex(update: LatexUpdate): Block {
+    return copy(
+        content = content<Block.Content.Latex>().copy(
+            text = update.text,
         )
     )
 }

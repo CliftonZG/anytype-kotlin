@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.anytypeio.anytype.analytics.base.Analytics
 import com.anytypeio.anytype.core_models.Id
 import com.anytypeio.anytype.core_models.Payload
+import com.anytypeio.anytype.domain.block.interactor.UpdateLatex
 import com.anytypeio.anytype.domain.block.interactor.UpdateText
 import com.anytypeio.anytype.domain.clipboard.Copy
 import com.anytypeio.anytype.domain.clipboard.Paste
@@ -29,6 +30,7 @@ import timber.log.Timber
 
 class SetBlockTextValueViewModel(
     private val updateText: UpdateText,
+    private val updateLatex: UpdateLatex,
     private val storage: Editor.Storage,
     private val dispatcher: Dispatcher<Payload>,
     private val paste: Paste,
@@ -111,6 +113,59 @@ class SetBlockTextValueViewModel(
                     target = textBlock.id,
                     text = textBlock.text,
                     marks = textBlock.marks.map { it.mark() }
+                )
+            ).proceed(
+                failure = { Timber.e(it) },
+                success = {}
+            )
+        }
+    }
+
+    fun onTextBlockTextChanged(textBlock: BlockView.Latex, tableId: Id, cellId: Id, ctx: Id) {
+        Timber.d("onTextBlockTextChanged, textBlock:[$textBlock]")
+
+        val newViews = storage.views.current().map { view ->
+            if (view.id == tableId && view is BlockView.Table) {
+                val newCells = view.cells.map { cell ->
+                    if (cell.block?.id == textBlock.id) {
+                        cell.copy(
+                            block = cell.block.copy(
+                                text = textBlock.text,
+                            )
+                        )
+                    } else {
+                        cell
+                    }
+                }
+                view.copy(cells = newCells)
+            } else {
+                view
+            }
+        }
+
+        val textUpdate = TextUpdate.Default(
+            target = cellId,
+            text = textBlock.text,
+            markup = emptyList()
+        )
+
+        val newDocument = storage.document.get().map { block ->
+            if (block.id == textUpdate.target) {
+                block.updateText(textUpdate)
+            } else
+                block
+        }
+
+        storage.document.update(newDocument)
+        viewModelScope.launch { storage.views.update(newViews) }
+
+        viewModelScope.launch {
+            updateText(
+                params = UpdateText.Params(
+                    context = ctx,
+                    target = textBlock.id,
+                    text = textBlock.text,
+                    marks = emptyList()
                 )
             ).proceed(
                 failure = { Timber.e(it) },
@@ -202,6 +257,7 @@ class SetBlockTextValueViewModel(
         private val paste: Paste,
         private val copy: Copy,
         private val updateText: UpdateText,
+        private val updateLatex: UpdateLatex,
         private val analytics: Analytics
     ) :
         ViewModelProvider.Factory {
@@ -214,6 +270,7 @@ class SetBlockTextValueViewModel(
                 paste = paste,
                 copy = copy,
                 updateText = updateText,
+                updateLatex = updateLatex,
                 analytics = analytics
             ) as T
         }

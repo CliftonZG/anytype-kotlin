@@ -1214,6 +1214,24 @@ fun List<BlockView>.updateTableOfContentsViews(header: BlockView.Text.Header): L
     return updated
 }
 
+fun List<BlockView>.updateLatexViews(header: BlockView.Latex): List<BlockView> {
+    val updated = this.map { view ->
+        if (view is BlockView.TableOfContents) {
+            val items = view.items.map { item ->
+                if (item.id == header.id) {
+                    item.copy(name = header.text)
+                } else {
+                    item
+                }
+            }
+            view.copy(items = items)
+        } else {
+            view
+        }
+    }
+    return updated
+}
+
 fun List<BlockView>.fillTableOfContents(): List<BlockView> {
     val headers = this.filterIsInstance<BlockView.Text.Header>()
     var isH1Present = false

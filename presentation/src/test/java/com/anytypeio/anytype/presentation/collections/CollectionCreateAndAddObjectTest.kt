@@ -1,24 +1,38 @@
 package com.anytypeio.anytype.presentation.collections
 
 import android.util.Log
+import app.cash.turbine.test
+import com.anytypeio.anytype.core_models.Command
+import com.anytypeio.anytype.core_models.InternalFlags
 import com.anytypeio.anytype.core_models.StubConfig
 import com.anytypeio.anytype.core_models.primitives.SpaceId
+import com.anytypeio.anytype.core_models.primitives.TypeKey
 import com.anytypeio.anytype.domain.base.AppCoroutineDispatchers
 import com.anytypeio.anytype.domain.dataview.interactor.CreateDataViewObject
+import com.anytypeio.anytype.domain.misc.DateProvider
 import com.anytypeio.anytype.domain.objects.DefaultStoreOfObjectTypes
 import com.anytypeio.anytype.domain.primitives.FieldParserImpl
 import com.anytypeio.anytype.domain.search.DataViewSubscriptionContainer
 import com.anytypeio.anytype.domain.workspace.SpaceManager
+import com.anytypeio.anytype.presentation.sets.DataViewViewState
 import com.anytypeio.anytype.presentation.sets.ObjectSetViewModel
 import com.anytypeio.anytype.presentation.sets.main.ObjectSetViewModelTestSetup
 import com.anytypeio.anytype.presentation.sets.subscription.DefaultDataViewSubscription
+import com.anytypeio.anytype.test_utils.MockDataFactory
+import kotlin.test.assertIs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import net.lachlanmckee.timberjunit.TimberTestRule
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
+import org.junit.Test
+import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verifyBlocking
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CollectionCreateAndAddObjectTest: ObjectSetViewModelTestSetup() {
@@ -63,6 +77,7 @@ class CollectionCreateAndAddObjectTest: ObjectSetViewModelTestSetup() {
             openObjectSet = openObjectSet,
             closeBlock = closeBlock,
             updateText = updateText,
+            updateLatex = updateLatex,
             interceptEvents = interceptEvents,
             createDataViewObject = CreateDataViewObject(
                 repo = repo,
@@ -97,6 +112,8 @@ class CollectionCreateAndAddObjectTest: ObjectSetViewModelTestSetup() {
             spaceManager = spaceManager,
             createTemplate = createTemplate,
             getObjectTypes = getObjectTypes,
+            storelessSubscriptionContainer = storelessSubscriptionContainer,
+            dispatchers = dispatchers,
             dateProvider = dateProvider,
             vmParams = ObjectSetViewModel.Params(
                 ctx = root,
@@ -107,6 +124,9 @@ class CollectionCreateAndAddObjectTest: ObjectSetViewModelTestSetup() {
             spaceSyncAndP2PStatusProvider = spaceSyncAndP2PStatusProvider,
             fieldParser = fieldParser
         )
+        stubNetworkMode()
+        stubObservePermissions()
+        stubAnalyticSpaceHelperDelegate()
     }
 
     @After

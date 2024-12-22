@@ -115,6 +115,8 @@ class SlashObjectTypesAdapter(
 }
 
 fun SlashItem.Subheader.getViewType(): Int = when (this) {
+    SlashItem.Subheader.Embed -> R.layout.item_slash_widget_subheader
+    SlashItem.Subheader.EmbedWithBack -> R.layout.item_slash_widget_subheader
     SlashItem.Subheader.Actions -> R.layout.item_slash_widget_subheader_left
     SlashItem.Subheader.ActionsWithBack -> R.layout.item_slash_widget_subheader
     SlashItem.Subheader.Alignment -> R.layout.item_slash_widget_subheader_left

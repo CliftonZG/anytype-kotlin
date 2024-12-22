@@ -4,6 +4,7 @@ object SlashConst {
 
     const val SLASH_MAIN_STYLE = "Style"
     const val SLASH_MAIN_MEDIA = "Media"
+    const val SLASH_MAIN_EMBED = "Embed"
     const val SLASH_MAIN_OBJECTS = "Objects"
     const val SLASH_MAIN_RELATIONS = "Relations"
     const val SLASH_MAIN_OTHER = "Other"
@@ -18,6 +19,14 @@ object SlashConst {
     const val SLASH_MEDIA_VIDEO = "Video"
     const val SLASH_MEDIA_BOOKMARK = "Bookmark"
     const val SLASH_MEDIA_CODE = "Code"
+
+    const val SLASH_EMBED_LATEX = "LaTeX"
+    const val SLASH_EMBED_FILE = "File"
+    const val SLASH_EMBED_PICTURE = "Picture"
+    const val SLASH_EMBED_IMAGE = "Image"
+    const val SLASH_EMBED_VIDEO = "Video"
+    const val SLASH_EMBED_BOOKMARK = "Bookmark"
+    const val SLASH_EMBED_CODE = "Code"
 
     const val SLASH_ACTION_DELETE = "Delete"
     const val SLASH_ACTION_DUPLICATE = "Duplicate"

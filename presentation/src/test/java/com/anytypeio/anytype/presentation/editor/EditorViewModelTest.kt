@@ -47,6 +47,7 @@ import com.anytypeio.anytype.domain.block.interactor.UpdateBackgroundColor
 import com.anytypeio.anytype.domain.block.interactor.UpdateBlocksMark
 import com.anytypeio.anytype.domain.block.interactor.UpdateCheckbox
 import com.anytypeio.anytype.domain.block.interactor.UpdateFields
+import com.anytypeio.anytype.domain.block.interactor.UpdateLatex
 import com.anytypeio.anytype.domain.block.interactor.UpdateLinkMarks
 import com.anytypeio.anytype.domain.block.interactor.UpdateText
 import com.anytypeio.anytype.domain.block.interactor.UpdateTextColor
@@ -108,6 +109,7 @@ import com.anytypeio.anytype.presentation.editor.cover.CoverImageHashProvider
 import com.anytypeio.anytype.presentation.editor.editor.BlockDimensions
 import com.anytypeio.anytype.presentation.editor.editor.Command
 import com.anytypeio.anytype.presentation.editor.editor.Interactor
+import com.anytypeio.anytype.presentation.editor.editor.LatexInteractor
 import com.anytypeio.anytype.presentation.editor.editor.Markup
 import com.anytypeio.anytype.presentation.editor.editor.Orchestrator
 import com.anytypeio.anytype.presentation.editor.editor.ViewState
@@ -195,6 +197,9 @@ open class EditorViewModelTest {
 
     @Mock
     lateinit var updateText: UpdateText
+
+    @Mock
+    lateinit var updateLatex: UpdateLatex
 
     @Mock
     lateinit var updateCheckbox: UpdateCheckbox
@@ -3895,6 +3900,7 @@ open class EditorViewModelTest {
             undo = undo,
             redo = redo,
             updateText = updateText,
+            updateLatex = updateLatex,
             updateCheckbox = updateCheckbox,
             updateTextStyle = updateTextStyle,
             updateBackgroundColor = updateBackgroundColor,
@@ -3910,6 +3916,10 @@ open class EditorViewModelTest {
                 proxies = proxies,
                 stores = storage,
                 matcher = DefaultPatternMatcher()
+            ),
+            latexInteractor = LatexInteractor.LatexTextInteractor(
+                proxies = proxies,
+                stores = storage,
             ),
             updateAlignment = updateAlignment,
             setupBookmark = setupBookmark,

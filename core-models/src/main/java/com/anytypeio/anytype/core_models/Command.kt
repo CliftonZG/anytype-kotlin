@@ -75,6 +75,18 @@ sealed class Command {
     ) : Command()
 
     /**
+     * @property contextId context id
+     * @property blockId target block id
+     * @property text updated text
+     * @property marks marks of the updated text
+     */
+    class UpdateLatex(
+        val contextId: Id,
+        val blockId: Id,
+        val text: String,
+    ) : Command()
+
+    /**
      * Commands for updating document's title
      * @property context id of the context
      * @property title new title for the document

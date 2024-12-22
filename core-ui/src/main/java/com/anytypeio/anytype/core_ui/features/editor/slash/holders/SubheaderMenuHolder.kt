@@ -30,6 +30,14 @@ class SubheaderMenuHolder(
                 flBack.visible()
                 R.string.slash_widget_main_media
             }
+            SlashItem.Subheader.Embed -> {
+                flBack.invisible()
+                R.string.slash_widget_main_embed
+            }
+            SlashItem.Subheader.EmbedWithBack -> {
+                flBack.visible()
+                R.string.slash_widget_main_embed
+            }
             SlashItem.Subheader.ObjectType -> {
                 flBack.invisible()
                 R.string.slash_widget_main_objects_subheader

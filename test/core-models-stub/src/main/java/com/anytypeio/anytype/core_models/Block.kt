@@ -190,6 +190,21 @@ fun StubCodeSnippet(
     fields = Block.Fields.empty()
 )
 
+fun StubLatex(
+    text: String = MockDataFactory.randomString(),
+    children: List<Id> = emptyList(),
+    marks: List<Block.Content.Text.Mark> = emptyList()
+): Block = Block(
+    id = MockDataFactory.randomUuid(),
+    content = StubTextContent(
+        text = text,
+        style = Block.Content.Text.Style.CODE_SNIPPET,
+        marks = marks
+    ),
+    children = children,
+    fields = Block.Fields.empty()
+)
+
 fun StubCallout(
     text: String = MockDataFactory.randomString(),
     children: List<Id> = emptyList(),
@@ -218,7 +233,7 @@ fun StubRelation(
     key = relationKey,
     name = MockDataFactory.randomString(),
     format = format,
-    source = Relation.Source.values().random()
+    source = Relation.Source.entries.toTypedArray().random()
 )
 
 fun StubBookmark(
@@ -365,9 +380,9 @@ fun StubLinkToObjectBlock(
     id = id,
     content = Block.Content.Link(
         target = target,
-        description = Block.Content.Link.Description.values().random(),
-        cardStyle = Block.Content.Link.CardStyle.values().random(),
-        iconSize = Block.Content.Link.IconSize.values().random(),
+        description = Block.Content.Link.Description.entries.toTypedArray().random(),
+        cardStyle = Block.Content.Link.CardStyle.entries.toTypedArray().random(),
+        iconSize = Block.Content.Link.IconSize.entries.toTypedArray().random(),
         relations = emptySet(),
         type = Block.Content.Link.Type.PAGE
     ),

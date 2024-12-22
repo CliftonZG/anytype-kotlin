@@ -2817,7 +2817,11 @@ message Rpc {
                 enum UseCase {
                     NONE = 0;
                     GET_STARTED = 1;
-                    EMPTY = 2;
+                    PERSONAL_PROJECTS = 2;
+                    KNOWLEDGE_BASE = 3;
+                    NOTES_DIARY = 4;
+                    STRATEGIC_WRITING = 5;
+                    EMPTY = 6;
                 }
             }
 
@@ -4534,7 +4538,7 @@ message Rpc {
     }
 
     message BlockLatex {
-        message SetText {
+        message SetLatex {
             message Request {
                 string contextId = 1;
                 string blockId = 2;
@@ -4584,6 +4588,34 @@ message Rpc {
             }
         }
 
+    }
+
+    message LataxBlock {
+        message SetLatex {
+            message Request {
+                string contextId = 1;
+                string blockId = 2;
+                string text = 3;
+                anytype.model.Range selectedTextRange = 4;
+            }
+
+            message Response {
+                Error error = 1;
+                ResponseEvent event = 2;
+
+                message Error {
+                    Code code = 1;
+                    string description = 2;
+
+                    enum Code {
+                        NULL = 0;
+                        UNKNOWN_ERROR = 1;
+                        BAD_INPUT = 2;
+                        // ...
+                    }
+                }
+            }
+        }
     }
 
     message BlockText {

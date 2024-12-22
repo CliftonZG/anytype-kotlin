@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    style="@style/DefaultDocumentContainerStyle">
+
+    <com.anytypeio.anytype.core_ui.features.editor.decoration.EditorDecorationContainer
+        android:id="@+id/decorationContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <FrameLayout
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:minHeight="@dimen/dp_48"
+        android:id="@+id/content"
+        android:background="@drawable/item_block_multi_select_mode_selector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/templateMenu"
+                style="@style/DefaultCodeBlockLanguageMenuStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="13dp"
+                android:layout_marginBottom="18dp"
+                android:text="@string/block_embed_latex_template_menu_title"
+                android:visibility="visible"/>
+
+            <com.judemanutd.katexview.KatexView
+                android:id="@+id/latexView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:visibility="visible"
+                />
+
+            <HorizontalScrollView
+                android:id="@+id/snippet_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fillViewport="true"
+                android:overScrollMode="never"
+                android:scrollbars="none"
+                android:visibility="visible">
+
+                <com.anytypeio.anytype.core_ui.widgets.LatexInputWidget
+                    android:id="@+id/snippet"
+                    style="@style/DefaultCodeBlockContentStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:focusable="true"
+                    android:paddingTop="18dp"
+                    android:paddingEnd="32dp"
+                    android:paddingBottom="21dp"
+                    android:textIsSelectable="true"
+                    tools:text="@string/default_text_placeholder" />
+
+            </HorizontalScrollView>
+        </LinearLayout>
+
+        <View
+            android:id="@+id/selected"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/dp_8"
+            android:layout_marginEnd="@dimen/dp_8"
+            android:background="@drawable/item_block_multi_select_mode_selector"
+            tools:background="@drawable/item_block_multi_select_selected" />
+
+    </FrameLayout>
+
+</FrameLayout>

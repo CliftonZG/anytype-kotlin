@@ -31,6 +31,7 @@ data class Block(
         val featuredRelations: List<String>? by default
         val name: String? by default
         val iconEmoji: String? by default
+        val iconOption: Double? by default
         val coverId: Id? by default
         val coverType: Double? by default
         val iconImage: Id? get() = map.getSingleValue<Id>(Relations.ICON_IMAGE)
@@ -41,6 +42,7 @@ data class Block(
         val done: Boolean? by default
         val lang: String? by default
         val fileExt: String? by default
+        val fileMimeType: String? by default
         val type: List<String>
             get() = when (val value = map[TYPE_KEY]) {
                 is String -> listOf(value)
@@ -64,6 +66,9 @@ data class Block(
                 is Int -> value.toDouble()
                 else -> null
             }
+
+        val analyticsContext: String? by default
+        val analyticsOriginalId: String? by default
 
         companion object {
             fun empty(): Fields = Fields(emptyMap())
@@ -371,7 +376,7 @@ data class Block(
             }
         }
 
-        data class Latex(val latex: String) : Content()
+        data class Latex(val latex: String, val text: String) : Content()
         data object TableOfContents : Content()
         data object Unsupported : Content()
 
@@ -429,7 +434,10 @@ data class Block(
              */
             data class Existing(val target: Id) : Bookmark()
         }
-        data object Latex : Prototype()
+        data class Latex(
+            val latex: String? = null,
+            val text: String? = null
+        )  : Prototype()
         data class Relation(
             val key: Id
         ) : Prototype()

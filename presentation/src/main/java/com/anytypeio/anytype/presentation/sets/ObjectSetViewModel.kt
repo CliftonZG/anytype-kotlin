@@ -29,8 +29,11 @@ import com.anytypeio.anytype.core_models.primitives.TypeKey
 import com.anytypeio.anytype.core_models.restrictions.DataViewRestriction
 import com.anytypeio.anytype.core_utils.common.EventWrapper
 import com.anytypeio.anytype.core_utils.ext.cancel
+import com.anytypeio.anytype.domain.auth.interactor.ClearLastOpenedObject
+import com.anytypeio.anytype.domain.base.AppCoroutineDispatchers
 import com.anytypeio.anytype.domain.base.Result
 import com.anytypeio.anytype.domain.base.fold
+import com.anytypeio.anytype.domain.block.interactor.UpdateLatex
 import com.anytypeio.anytype.domain.block.interactor.UpdateText
 import com.anytypeio.anytype.domain.block.interactor.sets.GetObjectTypes
 import com.anytypeio.anytype.domain.collections.AddObjectToCollection
@@ -39,6 +42,8 @@ import com.anytypeio.anytype.domain.dataview.interactor.CreateDataViewObject
 import com.anytypeio.anytype.domain.error.Error
 import com.anytypeio.anytype.domain.event.interactor.InterceptEvents
 import com.anytypeio.anytype.domain.event.interactor.SpaceSyncAndP2PStatusProvider
+import com.anytypeio.anytype.domain.library.StoreSearchByIdsParams
+import com.anytypeio.anytype.domain.library.StorelessSubscriptionContainer
 import com.anytypeio.anytype.domain.misc.DateProvider
 import com.anytypeio.anytype.domain.misc.UrlBuilder
 import com.anytypeio.anytype.domain.multiplayer.UserPermissionProvider
@@ -79,6 +84,8 @@ import com.anytypeio.anytype.core_models.TimeInMillis
 import com.anytypeio.anytype.presentation.objects.getCreateObjectParams
 import com.anytypeio.anytype.presentation.objects.isCreateObjectAllowed
 import com.anytypeio.anytype.presentation.objects.isTemplatesAllowed
+import com.anytypeio.anytype.presentation.profile.ProfileIconView
+import com.anytypeio.anytype.presentation.profile.profileIcon
 import com.anytypeio.anytype.presentation.relations.ObjectRelationView
 import com.anytypeio.anytype.presentation.relations.ObjectSetConfig.DEFAULT_LIMIT
 import com.anytypeio.anytype.presentation.relations.RelationListViewModel
@@ -122,9 +129,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
@@ -141,6 +150,7 @@ class ObjectSetViewModel(
     private val downloadUnsplashImage: DownloadUnsplashImage,
     private val setDocCoverImage: SetDocCoverImage,
     private val updateText: UpdateText,
+    private val updateLatex: UpdateLatex,
     private val interceptEvents: InterceptEvents,
     private val dispatcher: Dispatcher<Payload>,
     private val delegator: Delegator<Action>,
@@ -167,6 +177,8 @@ class ObjectSetViewModel(
     private val spaceManager: SpaceManager,
     private val viewerDelegate: ViewerDelegate,
     private val createTemplate: CreateTemplate,
+    private val storelessSubscriptionContainer: StorelessSubscriptionContainer,
+    private val dispatchers: AppCoroutineDispatchers,
     private val dateProvider: DateProvider,
     private val analyticSpaceHelperDelegate: AnalyticSpaceHelperDelegate,
     private val spaceSyncAndP2PStatusProvider: SpaceSyncAndP2PStatusProvider,

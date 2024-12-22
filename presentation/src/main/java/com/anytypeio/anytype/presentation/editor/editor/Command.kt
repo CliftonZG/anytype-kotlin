@@ -81,6 +81,7 @@ sealed class Command {
 
     sealed class Dialog : Command() {
         data class SelectLanguage(val target: String) : Dialog()
+        data class SelectLatexTemplate(val template: String) : Dialog()
     }
 
     sealed class OpenObjectRelationScreen : Command() {

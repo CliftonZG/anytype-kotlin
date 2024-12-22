@@ -1,5 +1,6 @@
 package com.anytypeio.anytype.middleware.interactor
 
+import android.util.Log
 import anytype.Rpc
 import anytype.model.Block
 import anytype.model.ParticipantPermissionChange
@@ -707,6 +708,23 @@ class Middleware @Inject constructor(
         )
         logRequestIfDebug(request)
         val (response, time) = measureTimedValue { service.blockTextSetText(request) }
+        logResponseIfDebug(response, time)
+    }
+
+    @Throws(Exception::class)
+    fun blockTextSetLatex(
+        contextId: String,
+        blockId: String,
+        text: String,
+    ) {
+        val request = Rpc.BlockLatex.SetLatex.Request(
+            contextId = contextId,
+            blockId = blockId,
+            text = text,
+        )
+        Log.v("Middleware", "blockTextSetLatex, request: $request")
+        logRequestIfDebug(request)
+        val (response, time) = measureTimedValue { service.blockLatexSetLatex(request) }
         logResponseIfDebug(response, time)
     }
 
