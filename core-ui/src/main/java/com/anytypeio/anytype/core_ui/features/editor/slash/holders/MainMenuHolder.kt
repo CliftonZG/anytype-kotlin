@@ -30,6 +30,10 @@ class MainMenuHolder(val binding: ItemSlashWidgetMainBinding) :
                 textMain.setText(R.string.slash_widget_main_media)
                 iconMain.setImageResource(R.drawable.ic_slash_main_media)
             }
+            SlashItem.Main.Embed -> {
+                textMain.setText(R.string.slash_widget_main_embed)
+                iconMain.setImageResource(R.drawable.ic_slash_main_media)
+            }
             SlashItem.Main.Objects -> {
                 textMain.setText(R.string.slash_widget_main_objects)
                 iconMain.setImageResource(R.drawable.ic_slash_main_objects)

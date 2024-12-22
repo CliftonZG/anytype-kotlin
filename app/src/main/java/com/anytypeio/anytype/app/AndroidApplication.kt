@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode.VmPolicy
+import android.util.Log
 import com.amplitude.api.Amplitude
 import com.amplitude.api.TrackingOptions
 import com.anytypeio.anytype.BuildConfig
@@ -125,9 +126,20 @@ class AndroidApplication : Application(), HasComponentDependencies {
 
     object SignalHandler {
         init {
-            System.loadLibrary(SIGNAL_HANDLER_LIB_NAME)
+            val SIGNAL_HANDLER_LIB_NAME = "signal_handler"
+            try {
+                System.loadLibrary(SIGNAL_HANDLER_LIB_NAME)
+                Log.v("AndroidApplication", "Loaded signal_handler library")
+                Timber.d("AndroidApplication: Loaded signal_handler library")
+            } catch (e: UnsatisfiedLinkError) {
+                Log.e("AndroidApplication", "Failed to load signal_handler library")
+                Timber.e("AndroidApplication: Failed to load signal_handler library")
+            }
+            catch(e: Exception) {
+                Log.e("AndroidApplication", "Failed to load signal_handler library")
+                Timber.e("AndroidApplication: Failed to load signal_handler library")
+            }
         }
         external fun initSignalHandler()
-        const val SIGNAL_HANDLER_LIB_NAME = "signal_handler"
     }
 }

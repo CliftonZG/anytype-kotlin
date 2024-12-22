@@ -258,7 +258,9 @@
     <string name="more">More</string>
     <string name="done">Done</string>
     <string name="select_scroll_and_move_blocks">To start, select blocks</string>
+    <string name="block_code_menu_title" translatable="false">Language</string>
     <string name="block_code_plain_text">Plain text</string>
+    <string name="block_embed_latex_template_menu_title" translatable="false">Template formula</string>
 
     <string name="undo">Undo</string>
     <string name="redo">Redo</string>
@@ -953,6 +955,7 @@
 
     <string name="slash_widget_main_style">Style</string>
     <string name="slash_widget_main_media">Media</string>
+    <string name="slash_widget_main_embed" translatable="false">Embed</string>
     <string name="slash_widget_main_objects">Objects</string>
     <string name="slash_widget_main_objects_subheader">Objects</string>
     <string name="slash_widget_main_relations">Relations</string>
@@ -1000,6 +1003,9 @@
     <string name="slash_widget_media_bookmark_subtitle">Save your favorite link with summary</string>
     <string name="slash_widget_media_code">Code snippet</string>
     <string name="slash_widget_media_code_subtitle">Capture code snippet</string>
+
+    <string name="slash_widget_embed_latex" translatable="false">LaTeX</string>
+    <string name="slash_widget_embed_latex_subtitle" translatable="false">LaTeX Subtitle</string>
 
     <string name="slash_widget_other_line">Line divider</string>
     <string name="slash_widget_other_dots">Dots divider</string>
@@ -1821,6 +1827,7 @@ Please provide specific details of your needs here.</string>
     <string name="main_navigation_content_desc_back_button">Back button</string>
     <string name="main_navigation_content_desc_search_button">Search objects button</string>
     <string name="main_navigation_content_desc_create_button">Create object button</string>
+    <string name="main_navigation_content_desc_home_button" translatable="false">Home button</string>
 
     <string name="chat">Chat</string>
     <string name="copy">Copy</string>
@@ -1847,6 +1854,6 @@ Please provide specific details of your needs here.</string>
     <string name="day_of_week_friday">Friday</string>
     <string name="day_of_week_saturday">Saturday</string>
     <string name="day_of_week_sunday">Sunday</string>
-    <string name="file">File</string>
+    <string name="file" translatable="false">File</string>
 
 </resources>

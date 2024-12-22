@@ -1793,6 +1793,36 @@ class HomeScreenViewModel(
         }
     }
 
+    fun onHomeClicked() {
+        viewModelScope.launch {
+            openWidgetObjectsHistory.forEach { (obj, space) ->
+                closeObject
+                    .async(
+                        CloseBlock.Params(
+                            target = obj,
+                            space = space
+                        )
+                    )
+                    .onSuccess {
+                        Timber.d("Closed object from widget object session history: $obj")
+                    }
+                    .onFailure {
+                        Timber.e(it, "Error while closing object from history")
+                    }
+            }
+            spaceManager.clear()
+            clearLastOpenedSpace.async(Unit).fold(
+                onSuccess = {
+                    Timber.d("Cleared last opened space before opening vault")
+                },
+                onFailure = {
+                    Timber.e(it, "Error while clearing last opened space before opening vault")
+                }
+            )
+            commands.emit(Command.OpenVault)
+        }
+    }
+
     fun onBackLongClicked() {
         navigate(destination = Navigation.OpenSpaceSwitcher)
     }

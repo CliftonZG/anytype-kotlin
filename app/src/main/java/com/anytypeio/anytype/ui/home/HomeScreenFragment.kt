@@ -300,7 +300,10 @@ class HomeScreenFragment : BaseComposeFragment(),
             onSeeAllObjectsClicked = vm::onSeeAllObjectsClicked,
             onCreateObjectInsideWidget = vm::onCreateObjectInsideWidget,
             onCreateDataViewObject = vm::onCreateDataViewObject,
-            onBackLongClicked = vm::onBackLongClicked
+            onBackLongClicked = vm::onBackLongClicked,
+            onHomeClicked = throttledClick(
+                onClick = vm::onHomeClicked
+            ),
         )
     }
 

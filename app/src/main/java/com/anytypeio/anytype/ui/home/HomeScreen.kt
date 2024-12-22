@@ -89,6 +89,7 @@ fun HomeScreen(
     onCreateNewObjectClicked: () -> Unit,
     onCreateNewObjectLongClicked: () -> Unit,
     onBackClicked: () -> Unit,
+    onHomeClicked: () -> Unit,
     onObjectCheckboxClicked: (Id, Boolean) -> Unit,
     onSpaceWidgetClicked: () -> Unit,
     onMove: (List<WidgetView>, FromIndex, ToIndex) -> Unit,
@@ -156,6 +157,7 @@ fun HomeScreen(
         ) {
             BottomNavigationMenu(
                 modifier = Modifier,
+                homeClick = onHomeClicked,
                 backClick = onBackClicked,
                 backLongClick = onBackLongClicked,
                 searchClick = onSearchClicked,
@@ -426,17 +428,17 @@ private fun WidgetList(
                     )
                 }
                 is WidgetView.Action.EditWidgets -> {
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp, start = 20.dp, end = 20.dp)
+                        .height(128.dp)
                     Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = 6.dp, start = 20.dp, end = 20.dp)
-                            .height(128.dp)
-                            .animateItemPlacement(
-                                spring(
-                                    stiffness = Spring.StiffnessHigh,
-                                    visibilityThreshold = IntOffset.Zero
-                                )
+                        Modifier.animateItem(
+                            fadeInSpec = null, fadeOutSpec = null, placementSpec = spring(
+                                stiffness = Spring.StiffnessHigh,
+                                visibilityThreshold = IntOffset.Zero
                             )
+                        )
                     ) {
                         AnimatedVisibility(
                             visible = mode is InteractionMode.Default,

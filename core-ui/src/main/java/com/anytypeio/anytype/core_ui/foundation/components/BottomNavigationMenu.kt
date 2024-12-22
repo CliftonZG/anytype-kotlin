@@ -51,6 +51,7 @@ private fun MyBottomNavigationMenu() {
 @Composable
 private fun MyBottomViewerNavigationMenu() {
     BottomNavigationMenu(
+        homeClick = {},
         backClick = {},
         backLongClick = {},
         searchClick = {},
@@ -63,6 +64,7 @@ private fun MyBottomViewerNavigationMenu() {
 @Composable
 fun BottomNavigationMenu(
     modifier: Modifier = Modifier,
+    homeClick: () -> Unit = {},
     backClick: () -> Unit = {},
     backLongClick: () -> Unit = {},
     searchClick: () -> Unit = {},
@@ -105,6 +107,12 @@ fun BottomNavigationMenu(
             contentDescription = stringResource(id = R.string.main_navigation_content_desc_search_button),
             res = BottomNavigationItem.SEARCH.res,
             onClick = searchClick
+        )
+        MenuItem(
+            modifier = Modifier.width(72.dp).height(52.dp),
+            contentDescription = stringResource(id = R.string.main_navigation_content_desc_home_button),
+            res = BottomNavigationItem.HOME.res,
+            onClick = homeClick
         )
     }
 }

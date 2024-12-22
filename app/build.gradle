@@ -144,12 +144,12 @@ android {
             // Enables building multiple APKs per ABI.
             enable true
             reset()
-            include "armeabi-v7a", "arm64-v8a"
+            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
             universalApk true
         }
     }
 
-    ndkVersion "23.2.8568313"
+    ndkVersion '27.0.12077973'
     namespace 'com.anytypeio.anytype'
 }
 
