@@ -9,6 +9,7 @@ import com.anytypeio.anytype.core_models.Relations
 import com.anytypeio.anytype.core_models.chats.Chat
 import com.anytypeio.anytype.core_models.primitives.Space
 import com.anytypeio.anytype.core_ui.text.splitByMarks
+import com.anytypeio.anytype.core_utils.common.DefaultFileInfo
 import com.anytypeio.anytype.core_utils.ext.withLatestFrom
 import com.anytypeio.anytype.domain.auth.interactor.GetAccount
 import com.anytypeio.anytype.domain.base.AppCoroutineDispatchers
@@ -28,17 +29,24 @@ import com.anytypeio.anytype.domain.multiplayer.ActiveSpaceMemberSubscriptionCon
 import com.anytypeio.anytype.domain.multiplayer.SpaceViewSubscriptionContainer
 import com.anytypeio.anytype.domain.`object`.OpenObject
 import com.anytypeio.anytype.domain.`object`.SetObjectDetails
+import com.anytypeio.anytype.domain.objects.StoreOfObjectTypes
 import com.anytypeio.anytype.presentation.common.BaseViewModel
 import com.anytypeio.anytype.presentation.home.OpenObjectNavigation
 import com.anytypeio.anytype.presentation.home.navigation
 import com.anytypeio.anytype.presentation.mapper.objectIcon
 import com.anytypeio.anytype.presentation.objects.ObjectIcon
 import com.anytypeio.anytype.presentation.search.GlobalSearchItemView
+import com.anytypeio.anytype.presentation.util.CopyFileToCacheDirectory
+import java.sql.Types
 import javax.inject.Inject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.combineLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 class DiscussionViewModel @Inject constructor(
@@ -55,7 +63,9 @@ class DiscussionViewModel @Inject constructor(
     private val urlBuilder: UrlBuilder,
     private val spaceViews: SpaceViewSubscriptionContainer,
     private val dispatchers: AppCoroutineDispatchers,
-    private val uploadFile: UploadFile
+    private val uploadFile: UploadFile,
+    private val storeOfObjectTypes: StoreOfObjectTypes,
+    private val copyFileToCacheDirectory: CopyFileToCacheDirectory
 ) : BaseViewModel() {
 
     val name = MutableStateFlow<String?>(null)
@@ -108,121 +118,125 @@ class DiscussionViewModel @Inject constructor(
         }
     }
 
-    // TODO move to IO thread.
     private suspend fun proceedWithObservingChatMessages(
         account: Id,
         chat: Id
     ) {
-        chatContainer
-            .watchWhileTrackingAttachments(chat = chat)
-            .withLatestFrom(
-                chatContainer.fetchAttachments(vmParams.space),
-                chatContainer.fetchReplies(chat = chat)
-            ) { result, dependencies, replies ->
-                result.map { msg ->
-                    val allMembers = members.get()
-                    val member = allMembers.let { type ->
-                        when (type) {
-                            is Store.Data -> type.members.find { member ->
-                                member.identity == msg.creator
-                            }
-                            is Store.Empty -> null
+        combine(
+            chatContainer
+                .watchWhileTrackingAttachments(chat = chat),
+            chatContainer.fetchAttachments(vmParams.space),
+            chatContainer.fetchReplies(chat = chat)
+        ) { result, dependencies, replies ->
+            result.map { msg ->
+                val allMembers = members.get()
+                val member = allMembers.let { type ->
+                    when (type) {
+                        is Store.Data -> type.members.find { member ->
+                            member.identity == msg.creator
                         }
+
+                        is Store.Empty -> null
                     }
+                }
 
-                    val content = msg.content
+                val content = msg.content
 
-                    val replyToId = msg.replyToMessageId
+                val replyToId = msg.replyToMessageId
 
-                    val reply = if (replyToId.isNullOrEmpty()) {
-                        null
-                    } else {
-                        val msg = replies[replyToId]
-                        if (msg != null) {
-                            DiscussionView.Message.Reply(
-                                msg = msg.id,
-                                text = msg.content?.text.orEmpty(),
-                                author = allMembers.let { type ->
-                                    when (type) {
-                                        is Store.Data -> type.members.find { member ->
-                                            member.identity == msg.creator
-                                        }?.name.orEmpty()
-                                        is Store.Empty -> ""
-                                    }
+                val reply = if (replyToId.isNullOrEmpty()) {
+                    null
+                } else {
+                    val msg = replies[replyToId]
+                    if (msg != null) {
+                        DiscussionView.Message.Reply(
+                            msg = msg.id,
+                            text = msg.content?.text.orEmpty(),
+                            author = allMembers.let { type ->
+                                when (type) {
+                                    is Store.Data -> type.members.find { member ->
+                                        member.identity == msg.creator
+                                    }?.name.orEmpty()
+
+                                    is Store.Empty -> ""
                                 }
-                            )
-                        } else {
-                            null
-                        }
+                            }
+                        )
+                    } else {
+                        null
                     }
+                }
 
-                    DiscussionView.Message(
-                        id = msg.id,
-                        timestamp = msg.createdAt * 1000,
-                        content = DiscussionView.Message.Content(
-                            msg = content?.text.orEmpty(),
-                            parts = content?.text
-                                .orEmpty()
-                                .splitByMarks(marks = content?.marks.orEmpty())
-                                .map { (part, styles) ->
-                                    DiscussionView.Message.Content.Part(
-                                        part = part,
-                                        styles = styles
+                DiscussionView.Message(
+                    id = msg.id,
+                    timestamp = msg.createdAt * 1000,
+                    content = DiscussionView.Message.Content(
+                        msg = content?.text.orEmpty(),
+                        parts = content?.text
+                            .orEmpty()
+                            .splitByMarks(marks = content?.marks.orEmpty())
+                            .map { (part, styles) ->
+                                DiscussionView.Message.Content.Part(
+                                    part = part,
+                                    styles = styles
+                                )
+                            }
+                    ),
+                    reply = reply,
+                    author = member?.name ?: msg.creator.takeLast(5),
+                    isUserAuthor = msg.creator == account,
+                    isEdited = msg.modifiedAt > msg.createdAt,
+                    reactions = msg.reactions.map { (emoji, ids) ->
+                        DiscussionView.Message.Reaction(
+                            emoji = emoji,
+                            count = ids.size,
+                            isSelected = ids.contains(account)
+                        )
+                    },
+                    attachments = msg.attachments.map { attachment ->
+                        when (attachment.type) {
+                            Chat.Message.Attachment.Type.Image -> DiscussionView.Message.Attachment.Image(
+                                target = attachment.target,
+                                url = urlBuilder.medium(path = attachment.target)
+                            )
+                            else -> {
+                                val wrapper = dependencies[attachment.target]
+                                if (wrapper?.layout == ObjectType.Layout.IMAGE) {
+                                    DiscussionView.Message.Attachment.Image(
+                                        target = attachment.target,
+                                        url = urlBuilder.large(path = attachment.target)
+                                    )
+                                } else {
+                                    val type = wrapper?.type?.firstOrNull()
+                                    DiscussionView.Message.Attachment.Link(
+                                        target = attachment.target,
+                                        wrapper = wrapper,
+                                        icon = wrapper?.objectIcon(urlBuilder) ?: ObjectIcon.None,
+                                        typeName = if (type != null)
+                                            storeOfObjectTypes.get(type)?.name.orEmpty()
+                                        else
+                                            ""
                                     )
                                 }
-                        ),
-                        reply = reply,
-                        author = member?.name ?: msg.creator.takeLast(5),
-                        isUserAuthor = msg.creator == account,
-                        isEdited = msg.modifiedAt > msg.createdAt,
-                        reactions = msg.reactions.map { (emoji, ids) ->
-                            DiscussionView.Message.Reaction(
-                                emoji = emoji,
-                                count = ids.size,
-                                isSelected = ids.contains(account)
-                            )
-                        },
-                        attachments = msg.attachments.map { attachment ->
-                            when(attachment.type) {
-                                Chat.Message.Attachment.Type.Image -> DiscussionView.Message.Attachment.Image(
-                                    target = attachment.target,
-                                    url = urlBuilder.medium(path = attachment.target)
-                                )
-                                else -> {
-                                    val wrapper = dependencies[attachment.target]
-                                    if (wrapper?.layout == ObjectType.Layout.IMAGE) {
-                                        DiscussionView.Message.Attachment.Image(
-                                            target = attachment.target,
-                                            url = urlBuilder.large(path = attachment.target)
-                                        )
-                                    } else {
-                                        DiscussionView.Message.Attachment.Link(
-                                            target = attachment.target,
-                                            wrapper = wrapper,
-                                            icon = wrapper?.objectIcon(urlBuilder) ?: ObjectIcon.None
-                                        )
-                                    }
-                                }
                             }
-                        }.also {
-                            if (it.isNotEmpty()) {
-                                Timber.d("Chat attachments: $it")
-                            }
-                        },
-                        avatar = if (member != null && !member.iconImage.isNullOrEmpty()) {
-                            DiscussionView.Message.Avatar.Image(
-                                urlBuilder.thumbnail(member.iconImage!!)
-                            )
-                        } else {
-                            DiscussionView.Message.Avatar.Initials(member?.name.orEmpty())
                         }
-                    )
-                }.reversed()
-            }
-//            .flowOn(dispatchers.io)
-            .collect { result ->
-                messages.value = result
-            }
+                    }.also {
+                        if (it.isNotEmpty()) {
+                            Timber.d("Chat attachments: $it")
+                        }
+                    },
+                    avatar = if (member != null && !member.iconImage.isNullOrEmpty()) {
+                        DiscussionView.Message.Avatar.Image(
+                            urlBuilder.thumbnail(member.iconImage!!)
+                        )
+                    } else {
+                        DiscussionView.Message.Avatar.Initials(member?.name.orEmpty())
+                    }
+                )
+            }.reversed()
+        }.flowOn(dispatchers.io).collect {
+            messages.value = it
+        }
     }
 
     fun onMessageSent(msg: String) {
@@ -252,6 +266,29 @@ class DiscussionViewModel @Inject constructor(
                                         type = Chat.Message.Attachment.Type.Image
                                     )
                                 )
+                            }
+                        }
+                        is DiscussionView.Message.ChatBoxAttachment.File -> {
+                            val path = withContext(dispatchers.io) {
+                                copyFileToCacheDirectory.copy(attachment.uri)
+                            }
+                            if (path != null) {
+                                uploadFile.async(
+                                    UploadFile.Params(
+                                        space = vmParams.space,
+                                        path = path
+                                    )
+                                ).onSuccess { file ->
+                                    // TODO delete file.
+                                    add(
+                                        Chat.Message.Attachment(
+                                            target = file.id,
+                                            type = Chat.Message.Attachment.Type.File
+                                        )
+                                    )
+                                }.onFailure {
+                                    Timber.e(it, "Error while uploading file as attachment")
+                                }
                             }
                         }
                     }
@@ -417,7 +454,11 @@ class DiscussionViewModel @Inject constructor(
         viewModelScope.launch {
             when(attachment) {
                 is DiscussionView.Message.Attachment.Image -> {
-                    // Do nothing.
+                    commands.emit(
+                        UXCommand.OpenFullScreenImage(
+                            url = urlBuilder.original(attachment.target)
+                        )
+                    )
                 }
                 is DiscussionView.Message.Attachment.Link -> {
                     val wrapper = attachment.wrapper
@@ -440,6 +481,17 @@ class DiscussionViewModel @Inject constructor(
         }
     }
 
+    fun onChatBoxFilePicked(infos: List<DefaultFileInfo>) {
+        Timber.d("onChatBoxFilePicked: $infos")
+        chatBoxAttachments.value = chatBoxAttachments.value + infos.map { info ->
+            DiscussionView.Message.ChatBoxAttachment.File(
+                uri = info.uri,
+                name = info.name,
+                size = info.size
+            )
+        }
+    }
+
     fun onExitEditMessageMode() {
         viewModelScope.launch {
             chatBoxMode.value = ChatBoxMode.Default
@@ -449,6 +501,7 @@ class DiscussionViewModel @Inject constructor(
     sealed class UXCommand {
         data object JumpToBottom : UXCommand()
         data class SetChatBoxInput(val input: String) : UXCommand()
+        data class OpenFullScreenImage(val url: String) : UXCommand()
     }
 
     sealed class ChatBoxMode {

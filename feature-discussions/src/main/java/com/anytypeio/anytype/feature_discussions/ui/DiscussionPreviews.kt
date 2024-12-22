@@ -122,7 +122,8 @@ fun DiscussionScreenPreview() {
         onReplyMessage = {},
         chatBoxMode = DiscussionViewModel.ChatBoxMode.Default,
         onClearReplyClicked = {},
-        onChatBoxMediaPicked = {}
+        onChatBoxMediaPicked = {},
+        onChatBoxFilePicked = {}
     )
 }
 
@@ -201,7 +202,8 @@ fun BubbleWithAttachmentPreview() {
             add(
                 DiscussionView.Message.Attachment.Link(
                     target = "ID",
-                    wrapper = null
+                    wrapper = null,
+                    typeName = "Page"
                 )
             )
         },

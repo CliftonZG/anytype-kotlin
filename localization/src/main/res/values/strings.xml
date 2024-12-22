@@ -749,6 +749,7 @@
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
     <string name="tomorrow">Tomorrow</string>
+    <string name="open_selected_date">Open selected date</string>
     <string name="no_date">No date</string>
     <string name="exact_day">Exact day</string>
     <string name="reorder">Reorder</string>
@@ -1270,6 +1271,7 @@
     <string name="dates_days_from">%1$s days from now</string>
 
     <string name="settings_use_yamux">Use a reserve multiplex library</string>
+    <string name="settings_share_local_logs">Share local logs</string>
 
     <!--endregion-->
 
@@ -1827,14 +1829,14 @@ Please provide specific details of your needs here.</string>
     <string name="chat_empty_state_message">There is no messages yet.\nBe the first to start a discussion.</string>
     <string name="write_a_message">Write a message...</string>
 
-    <string name="date_layout_mentioned_in">Mentioned in</string>
+    <string name="date_layout_mentioned_in">Mentions</string>
     <string name="date_layout_empty_items">There is nothing here for this date yet</string>
     <string name="date_layout_alert_date_out_of_range">The selected date is out of the valid range (years %1$d to %2$d). Please select a date within this range.</string>
     <string name="date_layout_item_created_by">by</string>
 
-    <string name="chat_attachment_object">Object</string>
-    <string name="chat_attachment_file">File</string>
-    <string name="chat_attachment_media">Media</string>
+    <string name="chat_attachment_object">Select existing object</string>
+    <string name="chat_attachment_file">Upload file</string>
+    <string name="chat_attachment_media">Upload media</string>
     <string name="chat_attachment_upload">Upload</string>
     <string name="chats_reply">Reply</string>
 
@@ -1845,5 +1847,6 @@ Please provide specific details of your needs here.</string>
     <string name="day_of_week_friday">Friday</string>
     <string name="day_of_week_saturday">Saturday</string>
     <string name="day_of_week_sunday">Sunday</string>
+    <string name="file">File</string>
 
 </resources>

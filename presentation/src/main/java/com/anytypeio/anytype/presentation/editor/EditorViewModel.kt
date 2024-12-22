@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.anytypeio.anytype.analytics.base.Analytics
 import com.anytypeio.anytype.analytics.base.EventsDictionary
+import com.anytypeio.anytype.analytics.base.EventsDictionary.Routes.objDate
 import com.anytypeio.anytype.analytics.base.EventsDictionary.searchScreenShow
 import com.anytypeio.anytype.analytics.base.EventsPropertiesKey
 import com.anytypeio.anytype.analytics.base.sendEvent
@@ -21,6 +22,7 @@ import com.anytypeio.anytype.core_models.InternalFlags
 import com.anytypeio.anytype.core_models.Key
 import com.anytypeio.anytype.core_models.Marketplace.COLLECTION_MARKETPLACE_ID
 import com.anytypeio.anytype.core_models.Marketplace.SET_MARKETPLACE_ID
+import com.anytypeio.anytype.core_models.MarketplaceObjectTypeIds
 import com.anytypeio.anytype.core_models.ObjectType
 import com.anytypeio.anytype.core_models.ObjectTypeIds
 import com.anytypeio.anytype.core_models.ObjectTypeUniqueKeys
@@ -48,7 +50,6 @@ import com.anytypeio.anytype.core_models.ext.sortByType
 import com.anytypeio.anytype.core_models.ext.supportNesting
 import com.anytypeio.anytype.core_models.ext.title
 import com.anytypeio.anytype.core_models.ext.updateTextContent
-import com.anytypeio.anytype.core_models.getSingleValue
 import com.anytypeio.anytype.core_models.multiplayer.SpaceSyncAndP2PStatusState
 import com.anytypeio.anytype.core_models.primitives.SpaceId
 import com.anytypeio.anytype.core_models.primitives.TypeId
@@ -91,7 +92,6 @@ import com.anytypeio.anytype.domain.networkmode.GetNetworkMode
 import com.anytypeio.anytype.domain.`object`.ConvertObjectToCollection
 import com.anytypeio.anytype.domain.`object`.ConvertObjectToSet
 import com.anytypeio.anytype.domain.`object`.UpdateDetail
-import com.anytypeio.anytype.domain.objects.GetDateObjectByTimestamp
 import com.anytypeio.anytype.domain.objects.StoreOfObjectTypes
 import com.anytypeio.anytype.domain.objects.StoreOfRelations
 import com.anytypeio.anytype.domain.page.CloseBlock
@@ -254,6 +254,7 @@ import com.anytypeio.anytype.core_models.TimeInMillis
 import com.anytypeio.anytype.core_models.TimeInSeconds
 import com.anytypeio.anytype.presentation.editor.ControlPanelMachine.Event.SAM.*
 import com.anytypeio.anytype.presentation.editor.editor.Intent.Clipboard.*
+import com.anytypeio.anytype.presentation.editor.editor.ext.isAllowedToShowTypesWidget
 import com.anytypeio.anytype.presentation.editor.model.OnEditorDatePickerEvent.OnDatePickerDismiss
 import com.anytypeio.anytype.presentation.editor.model.OnEditorDatePickerEvent.OnDateSelected
 import com.anytypeio.anytype.presentation.editor.model.OnEditorDatePickerEvent.OnTodayClick
@@ -266,7 +267,6 @@ import com.anytypeio.anytype.presentation.objects.toViews
 import com.anytypeio.anytype.presentation.profile.ProfileIconView
 import com.anytypeio.anytype.presentation.profile.profileIcon
 import com.anytypeio.anytype.presentation.relations.ObjectRelationView
-import com.anytypeio.anytype.presentation.relations.RelationListViewModel
 import com.anytypeio.anytype.presentation.relations.getNotIncludedRecommendedRelations
 import com.anytypeio.anytype.presentation.relations.getObjectRelations
 import com.anytypeio.anytype.presentation.relations.views
@@ -2066,10 +2066,12 @@ class EditorViewModel(
                 )
             )
         }
-        viewModelScope.sendAnalyticsUpdateTextMarkupEvent(
-            analytics = analytics,
-            type = type
-        )
+        viewModelScope.launch {
+            analytics.sendAnalyticsUpdateTextMarkupEvent(
+                markupType = type.toCoreModel(),
+                storeOfObjectTypes = storeOfObjectTypes
+            )
+        }
     }
 
     private fun proceedWithAlignmentUpdate(targets: List<Id>, alignment: Block.Align) {
@@ -2102,10 +2104,12 @@ class EditorViewModel(
                 )
             )
         }
-        viewModelScope.sendAnalyticsUpdateTextMarkupEvent(
-            analytics = analytics,
-            type = Content.Text.Mark.Type.TEXT_COLOR
-        )
+        viewModelScope.launch {
+            analytics.sendAnalyticsUpdateTextMarkupEvent(
+                markupType = Block.Content.Text.Mark.Type.TEXT_COLOR,
+                storeOfObjectTypes = storeOfObjectTypes
+            )
+        }
     }
 
     private fun onBlockBackgroundColorAction(ids: List<Id>, color: String) {
@@ -2154,9 +2158,11 @@ class EditorViewModel(
                     )
                 )
             )
-            sendAnalyticsUpdateTextMarkupEvent(
-                analytics = analytics,
-                type = type
+        }
+        viewModelScope.launch {
+            analytics.sendAnalyticsUpdateTextMarkupEvent(
+                markupType = type.toCoreModel(),
+                storeOfObjectTypes = storeOfObjectTypes
             )
         }
     }
@@ -3683,14 +3689,14 @@ class EditorViewModel(
 
             mode = EditorMode.Edit
 
-            controlPanelInteractor.onEvent(ControlPanelMachine.Event.SAM.OnApply)
+            controlPanelInteractor.onEvent(OnApply)
 
             viewModelScope.launch {
                 val blocks = (selected - exclude).sortedBy { id -> ordering[id] }
                 orchestrator.proxies.intents.send(
                     Intent.Document.Move(
                         context = context,
-                        target = moveTarget,
+                        target = if (targetContext != vmParams.ctx) "" else target,
                         targetContext = targetContext,
                         blocks = blocks,
                         position = position
@@ -3718,7 +3724,7 @@ class EditorViewModel(
 
             mode = EditorMode.Edit
 
-            controlPanelInteractor.onEvent(ControlPanelMachine.Event.SAM.OnApply)
+            controlPanelInteractor.onEvent(OnApply)
 
             viewModelScope.launch {
                 orchestrator.proxies.intents.send(
@@ -4530,7 +4536,7 @@ class EditorViewModel(
                     Timber.e(it, "Error while closing object")
                     navigate(
                         EventWrapper(
-                            AppNavigation.Command.OpenSetOrCollection(
+                            OpenSetOrCollection(
                                 target = target,
                                 space = space.id,
                                 isPopUpToDashboard
@@ -4541,7 +4547,7 @@ class EditorViewModel(
                 onSuccess = {
                     navigate(
                         EventWrapper(
-                            AppNavigation.Command.OpenSetOrCollection(
+                            OpenSetOrCollection(
                                 target = target,
                                 space = space.id,
                                 isPopUpToDashboard
@@ -4604,12 +4610,17 @@ class EditorViewModel(
         return controlPanelViewState.value?.let { state ->
             val isVisible = state.mentionToolbar.isVisible
             val isSlashWidgetVisible = state.slashWidget.isVisible
+            val isTypesWidgetVisible = _typesWidgetState.value.visible
             if (isVisible) {
                 onMentionEvent(MentionEvent.MentionSuggestStop)
                 return true
             }
             if (isSlashWidgetVisible) {
                 controlPanelInteractor.onEvent(ControlPanelMachine.Event.Slash.OnStop)
+                return true
+            }
+            if (isTypesWidgetVisible) {
+                sendHideTypesWidgetEvent()
                 return true
             }
             if (!orchestrator.stores.focus.current().isEmpty) {
@@ -5035,9 +5046,9 @@ class EditorViewModel(
                                 )
                             )
                         )
-                        sendAnalyticsUpdateTextMarkupEvent(
-                            analytics = analytics,
-                            type = type
+                        analytics.sendAnalyticsUpdateTextMarkupEvent(
+                            markupType = type,
+                            storeOfObjectTypes = storeOfObjectTypes
                         )
                     }
                 }
@@ -5117,6 +5128,11 @@ class EditorViewModel(
                 controlPanelInteractor.onEvent(ControlPanelMachine.Event.Slash.OnStop)
                 onHideKeyboardClicked()
                 addSimpleTableBlock(item)
+            }
+            is SlashItem.SelectDate -> {
+                mentionDatePicker.value = EditorDatePickerState.Visible.Link(
+                    targetId = targetId
+                )
             }
         }
     }
@@ -5364,9 +5380,9 @@ class EditorViewModel(
                     )
                 }
                 is SlashItem.Color.Text -> {
-                    sendAnalyticsUpdateTextMarkupEvent(
-                        analytics = analytics,
-                        type = Content.Text.Mark.Type.TEXT_COLOR
+                    analytics.sendAnalyticsUpdateTextMarkupEvent(
+                        markupType = Content.Text.Mark.Type.TEXT_COLOR,
+                        storeOfObjectTypes = storeOfObjectTypes
                     )
                 }
             }
@@ -5466,11 +5482,6 @@ class EditorViewModel(
             SlashItem.Actions.LinkTo -> {
                 onHideKeyboardClicked()
                 proceedWithLinkToButtonClicked(block = targetId, position = slashStartIndex)
-            }
-            SlashItem.Actions.SelectDate -> {
-                mentionDatePicker.value = EditorDatePickerState.Visible.Link(
-                    targetId = targetId
-                )
             }
         }
     }
@@ -6170,13 +6181,14 @@ class EditorViewModel(
     fun onMentionSuggestClick(mention: DefaultSearchItem, mentionTrigger: String, pos: Int) {
         Timber.d("onMentionSuggestClick, mention:[$mention] mentionTrigger:[$mentionTrigger]")
         if (mention is DefaultObjectView)  {
-            viewModelScope.sendAnalyticsSearchResultEvent(
-                analytics = analytics,
-                pos = pos,
-                length = mentionTrigger.length - 1,
-                spaceParams = provideParams(vmParams.space.id)
-            )
             onCreateMentionInText(id = mention.id, name = mention.name, mentionTrigger = mentionTrigger)
+            viewModelScope.launch {
+                analytics.sendAnalyticsUpdateTextMarkupEvent(
+                    markupType = Content.Text.Mark.Type.MENTION,
+                    typeId = mention.type,
+                    storeOfObjectTypes = storeOfObjectTypes
+                )
+            }
         }
         if (mention is SelectDateItem) {
             val targetId = orchestrator.stores.focus.current().targetOrNull()
@@ -6354,7 +6366,7 @@ class EditorViewModel(
             orchestrator.proxies.intents.send(
                 Intent.Document.Move(
                     context = context,
-                    target = target,
+                    target = if (targetContext != context) "" else target,
                     targetContext = targetContext,
                     blocks = listOf(dragged),
                     position = position
@@ -7600,9 +7612,15 @@ class EditorViewModel(
                 }
             }
             containsFlag -> {
-                val restrictions = orchestrator.stores.objectRestrictions.current()
-                if (restrictions.none { it == ObjectRestriction.TYPE_CHANGE } && isUserEditor) {
+                if (blocks.isAllowedToShowTypesWidget(
+                        objectRestrictions = orchestrator.stores.objectRestrictions.current(),
+                        isOwnerOrEditor = permission.value?.isOwnerOrEditor() == true,
+                        objectLayout = orchestrator.stores.details.current().details[context]?.layout?.toInt()
+                    )
+                ) {
                     setTypesWidgetVisibility(true)
+                } else {
+                    Timber.d("Object doesn't allow to show types widget, skip")
                 }
             }
         }
@@ -7746,6 +7764,21 @@ class EditorViewModel(
         }
     }
 
+    fun onOpenDateObjectByTimeInMillis(timeInMillis: TimeInMillis) {
+        Timber.d("onOpenDateObjectByTimeInMillis, timeInMillis:[$timeInMillis]")
+        viewModelScope.launch {
+            fieldParser.getDateObjectByTimeInSeconds(
+                timeInSeconds = timeInMillis / 1000,
+                spaceId = vmParams.space,
+                actionSuccess = { obj -> navigateToDateObject(obj.id) },
+                actionFailure = {
+                    sendToast("Error while opening date object")
+                    Timber.e(it, "Error while opening date object")
+                }
+            )
+        }
+    }
+
     private fun handleDateSelected(
         timeInMillis: TimeInMillis?,
         actionType: EditorCalendarActionType,
@@ -7793,15 +7826,26 @@ class EditorViewModel(
                 spaceId = vmParams.space,
                 actionSuccess = { obj ->
                     when (actionType) {
-                        EditorCalendarActionType.MENTION -> onCreateMentionInText(
-                            id = obj.id,
-                            name = obj.name.orEmpty(),
-                            mentionTrigger = mentionFilter.value
-                        )
-                        EditorCalendarActionType.LINK -> onCreateDateLink(
-                            linkId = obj.id,
-                            targetId = targetId
-                        )
+                        EditorCalendarActionType.MENTION -> {
+                            onCreateMentionInText(
+                                id = obj.id,
+                                name = obj.name.orEmpty(),
+                                mentionTrigger = mentionFilter.value
+                            )
+                            viewModelScope.launch {
+                                analytics.sendAnalyticsUpdateTextMarkupEvent(
+                                    markupType = Content.Text.Mark.Type.MENTION,
+                                    typeId = ObjectTypeIds.DATE,
+                                    storeOfObjectTypes = storeOfObjectTypes
+                                )
+                            }
+                        }
+                        EditorCalendarActionType.LINK -> {
+                            onCreateDateLink(
+                                linkId = obj.id,
+                                targetId = targetId
+                            )
+                        }
                     }
                 },
                 actionFailure = {
@@ -7833,7 +7877,8 @@ class EditorViewModel(
                         target = targetId,
                         position = position,
                         prototype = Prototype.Link(target = linkId),
-                        onSuccess = {}
+                        onSuccess = {},
+                        isDate = true
                     )
                 )
             }

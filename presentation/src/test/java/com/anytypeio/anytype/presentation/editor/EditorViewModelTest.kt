@@ -33,6 +33,7 @@ import com.anytypeio.anytype.domain.block.interactor.ClearBlockStyle
 import com.anytypeio.anytype.domain.block.interactor.CreateBlock
 import com.anytypeio.anytype.domain.block.interactor.DuplicateBlock
 import com.anytypeio.anytype.domain.block.interactor.MergeBlocks
+import com.anytypeio.anytype.domain.block.interactor.Move
 import com.anytypeio.anytype.domain.block.interactor.MoveOld
 import com.anytypeio.anytype.domain.block.interactor.RemoveLinkMark
 import com.anytypeio.anytype.domain.block.interactor.ReplaceBlock
@@ -131,6 +132,7 @@ import com.anytypeio.anytype.presentation.util.TXT
 import com.anytypeio.anytype.presentation.util.dispatchers
 import com.anytypeio.anytype.presentation.util.downloader.DocumentFileShareDownloader
 import com.anytypeio.anytype.presentation.util.downloader.MiddlewareShareDownloader
+import com.anytypeio.anytype.presentation.widgets.collection.ResourceProvider
 import com.anytypeio.anytype.test_utils.MockDataFactory
 import com.jraska.livedata.test
 import kotlin.test.assertEquals
@@ -276,7 +278,7 @@ open class EditorViewModelTest {
     lateinit var updateTitle: UpdateTitle
 
     @Mock
-    lateinit var move: MoveOld
+    lateinit var move: Move
 
     @Mock
     lateinit var turnIntoDocument: TurnIntoDocument
@@ -372,6 +374,9 @@ open class EditorViewModelTest {
 
     @Mock
     lateinit var fieldParser: FieldParser
+
+    @Mock
+    lateinit var resourceProvider: ResourceProvider
 
     lateinit var vm: EditorViewModel
 
@@ -3942,7 +3947,8 @@ open class EditorViewModelTest {
                 coverImageHashProvider = coverImageHashProvider,
                 storeOfRelations = storeOfRelations,
                 storeOfObjectTypes = storeOfObjectTypes,
-                fieldParser = fieldParser
+                fieldParser = fieldParser,
+                resourceProvider = resourceProvider,
             ),
             orchestrator = orchestrator,
             analytics = analytics,

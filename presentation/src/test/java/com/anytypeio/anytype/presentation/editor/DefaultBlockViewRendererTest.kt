@@ -3,9 +3,12 @@ package com.anytypeio.anytype.presentation.editor
 import android.util.Log
 import com.anytypeio.anytype.core_models.Block
 import com.anytypeio.anytype.core_models.Block.Content.Link
+import com.anytypeio.anytype.core_models.DayOfWeekCustom
 import com.anytypeio.anytype.core_models.Id
 import com.anytypeio.anytype.core_models.ObjectType
+import com.anytypeio.anytype.core_models.ObjectType.Layout
 import com.anytypeio.anytype.core_models.Relations
+import com.anytypeio.anytype.core_models.RelativeDate
 import com.anytypeio.anytype.core_models.StubBookmark
 import com.anytypeio.anytype.core_models.StubCallout
 import com.anytypeio.anytype.core_models.StubFile
@@ -28,6 +31,7 @@ import com.anytypeio.anytype.domain.objects.GetDateObjectByTimestamp
 import com.anytypeio.anytype.domain.objects.StoreOfRelations
 import com.anytypeio.anytype.domain.primitives.FieldParser
 import com.anytypeio.anytype.domain.primitives.FieldParserImpl
+import com.anytypeio.anytype.domain.resources.StringResourceProvider
 import com.anytypeio.anytype.emojifier.data.DefaultDocumentEmojiIconProvider
 import com.anytypeio.anytype.presentation.MockBlockContentFactory.StubLinkContent
 import com.anytypeio.anytype.presentation.MockBlockFactory.link
@@ -44,6 +48,7 @@ import com.anytypeio.anytype.presentation.editor.render.parseThemeBackgroundColo
 import com.anytypeio.anytype.presentation.editor.toggle.ToggleStateHolder
 import com.anytypeio.anytype.presentation.objects.ObjectIcon
 import com.anytypeio.anytype.presentation.util.TXT
+import com.anytypeio.anytype.presentation.widgets.collection.ResourceProvider
 import com.anytypeio.anytype.test_utils.MockDataFactory
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
@@ -119,17 +124,24 @@ class DefaultBlockViewRendererTest {
     @Mock
     lateinit var getDateObjectByTimestamp: GetDateObjectByTimestamp
 
+    @Mock
+    lateinit var resourceProvider: ResourceProvider
+
+    @Mock
+    lateinit var stringResourceProvider: StringResourceProvider
+
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        fieldParser = FieldParserImpl(dateProvider, logger, getDateObjectByTimestamp)
+        fieldParser = FieldParserImpl(dateProvider, logger, getDateObjectByTimestamp, stringResourceProvider)
         renderer = DefaultBlockViewRenderer(
             urlBuilder = UrlBuilder(gateway),
             toggleStateHolder = toggleStateHolder,
             coverImageHashProvider = coverImageHashProvider,
             storeOfRelations = storeOfRelations,
             storeOfObjectTypes = storeOfObjectTypes,
-            fieldParser = fieldParser
+            fieldParser = fieldParser,
+            resourceProvider = resourceProvider
         )
     }
 
@@ -2372,6 +2384,10 @@ class DefaultBlockViewRendererTest {
 
         val title = MockTypicalDocumentFactory.title
         val header = MockTypicalDocumentFactory.header
+
+        resourceProvider.stub {
+            onBlocking { getNonExistentObjectTitle() } doReturn NON_EXISTENT_OBJECT_MENTION_NAME
+        }
 
         val mentionText1 = "Foobar"
         val mentionTextUpdated1 = NON_EXISTENT_OBJECT_MENTION_NAME //Non-existent object
@@ -5452,4 +5468,347 @@ class DefaultBlockViewRendererTest {
     }
 
     //endregion
+
+    //region Date mention
+
+    /**
+     * ENABLE_RELATIVE_DATES_IN_MENTIONS should be enabled
+     */
+    @Test
+    fun `should set date mention in text and shift all markups when relative date is shorter then mention text`() {
+
+        val title = MockTypicalDocumentFactory.title
+        val header = MockTypicalDocumentFactory.header
+
+        val timestamp = 1733775232L
+
+        val relativeDateTomorrow = "Tomorrow"
+
+        val relativeDate = RelativeDate.Tomorrow(
+            initialTimeInMillis = timestamp,
+            dayOfWeek = DayOfWeekCustom.MONDAY
+        )
+
+        dateProvider.stub {
+            onBlocking { calculateRelativeDates(dateInSeconds = timestamp) } doReturn relativeDate
+        }
+
+        resourceProvider.stub {
+            onBlocking { toFormattedString(relativeDate) } doReturn relativeDateTomorrow
+        }
+
+        val mentionTextUpdated1 = "07-12-2024"
+        val source = "Start 07-12-2024 middle"
+        val sourceUpdated = "Start $relativeDateTomorrow middle"
+        val textColor = "F0So"
+        val mentionTarget1 = "_date_07_12_2024"
+
+        val marks: List<Block.Content.Text.Mark> = listOf(
+            Block.Content.Text.Mark(
+                range = 0..5,
+                type = Block.Content.Text.Mark.Type.TEXT_COLOR,
+                param = textColor
+            ),
+            Block.Content.Text.Mark(
+                range = 6..16,
+                type = Block.Content.Text.Mark.Type.MENTION,
+                param = mentionTarget1
+            ),
+            Block.Content.Text.Mark(
+                range = 17..22,
+                type = Block.Content.Text.Mark.Type.BOLD
+            )
+        )
+
+        val a = Block(
+            id = MockDataFactory.randomUuid(),
+            children = listOf(),
+            content = Block.Content.Text(
+                text = source,
+                style = Block.Content.Text.Style.P,
+                marks = marks,
+                align = Block.Align.AlignLeft
+            ),
+            fields = Block.Fields.empty()
+        )
+
+        val page = Block(
+            id = MockDataFactory.randomUuid(),
+            children = listOf(header.id, a.id),
+            fields = Block.Fields.empty(),
+            content = Block.Content.Smart
+        )
+
+        val fieldsUpdated1 = Block.Fields(
+            mapOf(
+                Relations.ID to mentionTarget1,
+                Relations.NAME to mentionTextUpdated1,
+                Relations.TIMESTAMP to 1733775232,
+                Relations.LAYOUT to Layout.DATE.code.toDouble()
+            )
+        )
+
+        val detailsAmend = mapOf(
+            mentionTarget1 to fieldsUpdated1,
+        )
+
+        val blocks = listOf(page, header, title, a)
+
+        val map = blocks.asMap()
+
+        wrapper = BlockViewRenderWrapper(
+            blocks = map,
+            renderer = renderer
+        )
+
+        val result = runBlocking {
+            wrapper.render(
+                root = page,
+                anchor = page.id,
+                focus = Editor.Focus.id(a.id),
+                indent = 0,
+                details = Block.Details(detailsAmend)
+            )
+        }
+
+        val expected = listOf(
+            BlockView.Title.Basic(
+                id = title.id,
+                isFocused = false,
+                text = title.content<Block.Content.Text>().text,
+                image = null,
+                mode = BlockView.Mode.EDIT
+            ),
+            BlockView.Text.Paragraph(
+                id = a.id,
+                text = sourceUpdated,
+                marks = listOf(
+                    Markup.Mark.TextColor(
+                        from = 0,
+                        to = 5,
+                        color = textColor
+                    ),
+                    Markup.Mark.Mention.Date(
+                        from = 6,
+                        to = 14,
+                        param = mentionTarget1
+                    ),
+                    Markup.Mark.Bold(
+                        from = 15,
+                        to = 20
+                    )
+                ),
+                isFocused = true,
+                alignment = Alignment.START,
+                decorations = listOf(
+                    BlockView.Decoration(
+                        background = a.parseThemeBackgroundColor()
+                    )
+                )
+            )
+        )
+
+        assertEquals(expected = expected, actual = result)
+    }
+
+
+    /**
+     * ENABLE_RELATIVE_DATES_IN_MENTIONS should be enabled
+     */
+    @Test
+    fun `should set date mention in text and shift all markups when relative date is longer then mention text`() {
+
+        val title = MockTypicalDocumentFactory.title
+        val header = MockTypicalDocumentFactory.header
+
+        val timestamp = 1733775232L
+
+        val relativeDateTomorrow = "TomorrowTomorrowTomorrow"
+
+        val relativeDate = RelativeDate.Tomorrow(
+            initialTimeInMillis = timestamp,
+            dayOfWeek = DayOfWeekCustom.MONDAY
+        )
+
+        dateProvider.stub {
+            onBlocking { calculateRelativeDates(dateInSeconds = timestamp) } doReturn relativeDate
+        }
+
+        resourceProvider.stub {
+            onBlocking { toFormattedString(relativeDate) } doReturn relativeDateTomorrow
+        }
+
+        val mentionTextUpdated1 = "07-12-2024"
+        val source = "Start 07-12-2024 middle"
+        val sourceUpdated = "Start $relativeDateTomorrow middle"
+        val textColor = "F0So"
+        val mentionTarget1 = "_date_07_12_2024"
+
+        val marks: List<Block.Content.Text.Mark> = listOf(
+            Block.Content.Text.Mark(
+                range = 0..5,
+                type = Block.Content.Text.Mark.Type.TEXT_COLOR,
+                param = textColor
+            ),
+            Block.Content.Text.Mark(
+                range = 6..16,
+                type = Block.Content.Text.Mark.Type.MENTION,
+                param = mentionTarget1
+            ),
+            Block.Content.Text.Mark(
+                range = 17..22,
+                type = Block.Content.Text.Mark.Type.BOLD
+            )
+        )
+
+        val a = Block(
+            id = MockDataFactory.randomUuid(),
+            children = listOf(),
+            content = Block.Content.Text(
+                text = source,
+                style = Block.Content.Text.Style.P,
+                marks = marks,
+                align = Block.Align.AlignLeft
+            ),
+            fields = Block.Fields.empty()
+        )
+
+        val page = Block(
+            id = MockDataFactory.randomUuid(),
+            children = listOf(header.id, a.id),
+            fields = Block.Fields.empty(),
+            content = Block.Content.Smart
+        )
+
+        val fieldsUpdated1 = Block.Fields(
+            mapOf(
+                Relations.ID to mentionTarget1,
+                Relations.NAME to mentionTextUpdated1,
+                Relations.TIMESTAMP to 1733775232,
+                Relations.LAYOUT to Layout.DATE.code.toDouble()
+            )
+        )
+
+        val detailsAmend = mapOf(
+            mentionTarget1 to fieldsUpdated1,
+        )
+
+        val blocks = listOf(page, header, title, a)
+
+        val map = blocks.asMap()
+
+        wrapper = BlockViewRenderWrapper(
+            blocks = map,
+            renderer = renderer
+        )
+
+        val result = runBlocking {
+            wrapper.render(
+                root = page,
+                anchor = page.id,
+                focus = Editor.Focus.id(a.id),
+                indent = 0,
+                details = Block.Details(detailsAmend)
+            )
+        }
+
+        val expected = listOf(
+            BlockView.Title.Basic(
+                id = title.id,
+                isFocused = false,
+                text = title.content<Block.Content.Text>().text,
+                image = null,
+                mode = BlockView.Mode.EDIT
+            ),
+            BlockView.Text.Paragraph(
+                id = a.id,
+                text = sourceUpdated,
+                marks = listOf(
+                    Markup.Mark.TextColor(
+                        from = 0,
+                        to = 5,
+                        color = textColor
+                    ),
+                    Markup.Mark.Mention.Date(
+                        from = 6,
+                        to = 30,
+                        param = mentionTarget1
+                    ),
+                    Markup.Mark.Bold(
+                        from = 31,
+                        to = 36
+                    )
+                ),
+                isFocused = true,
+                alignment = Alignment.START,
+                decorations = listOf(
+                    BlockView.Decoration(
+                        background = a.parseThemeBackgroundColor()
+                    )
+                )
+            )
+        )
+
+        assertEquals(expected = expected, actual = result)
+    }
+    //endregion
+
+    @Test
+    fun `should not render file block in case of file layout`() {
+
+        val file = StubFile(
+            backgroundColor = null,
+            state = Block.Content.File.State.DONE,
+            type = Block.Content.File.Type.FILE
+        )
+
+        val paragraph = StubParagraph()
+
+        val page = StubSmartBlock(children = listOf(paragraph.id, file.id))
+
+        val details = mapOf(page.id to Block.Fields(
+            mapOf(
+                Relations.NAME to "file-name",
+                Relations.LAYOUT to Layout.FILE.code.toDouble()
+            )
+        ))
+
+        val blocks = listOf(page, paragraph, file)
+
+        val map = blocks.asMap()
+
+        wrapper = BlockViewRenderWrapper(
+            blocks = map,
+            renderer = renderer
+        )
+
+        val result = runBlocking {
+            wrapper.render(
+                root = page,
+                anchor = page.id,
+                focus = Editor.Focus.empty(),
+                indent = 0,
+                details = Block.Details(details)
+            )
+        }
+
+        val expected = listOf(
+            BlockView.Text.Paragraph(
+                indent = 0,
+                isFocused = false,
+                id = paragraph.id,
+                marks = emptyList(),
+                background = paragraph.parseThemeBackgroundColor(),
+                text = paragraph.content<Block.Content.Text>().text,
+                decorations = listOf(
+                    BlockView.Decoration(
+                        style = BlockView.Decoration.Style.None,
+                        background = paragraph.parseThemeBackgroundColor()
+                    )
+                ),
+            )
+        )
+
+        assertEquals(expected = expected, actual = result)
+    }
 }

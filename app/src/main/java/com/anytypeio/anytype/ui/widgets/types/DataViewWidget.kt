@@ -102,14 +102,7 @@ fun DataViewListWidgetCard(
                 .padding(horizontal = 0.dp, vertical = 6.dp)
         ) {
             WidgetHeader(
-                title = when (val name = item.name) {
-                    is WidgetView.Name.Default -> {
-                        name.prettyPrintName.ifEmpty { stringResource(id = R.string.untitled) }
-                    }
-                    is WidgetView.Name.Bundled -> {
-                        stringResource(id = name.source.res())
-                    }
-                },
+                title = item.getPrettyName(),
                 isCardMenuExpanded = isCardMenuExpanded,
                 isHeaderMenuExpanded = isHeaderMenuExpanded,
                 onWidgetHeaderClicked = {
@@ -235,14 +228,7 @@ fun GalleryWidgetCard(
                 .padding(horizontal = 0.dp, vertical = 6.dp)
         ) {
             WidgetHeader(
-                title = when (val source = item.name) {
-                    is WidgetView.Name.Default -> {
-                        source.prettyPrintName.ifEmpty { stringResource(id = R.string.untitled) }
-                    }
-                    is WidgetView.Name.Bundled -> {
-                        stringResource(id = source.source.res())
-                    }
-                },
+                title = item.getPrettyName(),
                 isCardMenuExpanded = isCardMenuExpanded,
                 isHeaderMenuExpanded = isHeaderMenuExpanded,
                 onWidgetHeaderClicked = {
@@ -540,18 +526,13 @@ private fun GalleryWidgetItemCard(
                     iconSize = 18.dp,
                     icon = item.objectIcon,
                     modifier = Modifier
-                        .align(Alignment.CenterVertically)
                         .padding(start = 12.dp, top = 9.dp),
-                    onTaskIconClicked = {}
+                    onTaskIconClicked = {
+                        // Do nothing.
+                    }
                 )
-                val prettyPrintName = item.name.prettyPrintName
-                val name = if (prettyPrintName.isNullOrEmpty()) {
-                    stringResource(id = R.string.untitled)
-                } else {
-                    prettyPrintName
-                }
                 Text(
-                    text = name,
+                    text = item.getPrettyName(),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     style = Caption1Medium,
@@ -566,14 +547,8 @@ private fun GalleryWidgetItemCard(
                 )
             }
         } else {
-            val prettyPrintName = item.name.prettyPrintName
-            val name = if (prettyPrintName.isNullOrEmpty()) {
-                stringResource(id = R.string.untitled)
-            } else {
-                prettyPrintName
-            }
             Text(
-                text = name,
+                text =  item.getPrettyName(),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 style = Caption1Medium,

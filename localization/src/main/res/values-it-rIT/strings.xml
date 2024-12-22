@@ -677,6 +677,7 @@
     <string name="today">Oggi</string>
     <string name="yesterday">Ieri</string>
     <string name="tomorrow">Domani</string>
+    <string name="open_selected_date">Apri la data selezionata</string>
     <string name="no_date">Nessuna data</string>
     <string name="exact_day">Giorno esatto</string>
     <string name="reorder">Riordina</string>
@@ -1093,6 +1094,7 @@
     <string name="dates_days_ago">%1$s giorni fa</string>
     <string name="dates_days_from">%1$s giorni da adesso</string>
     <string name="settings_use_yamux">Usa una libreria multiplex di riserva</string>
+    <string name="settings_share_local_logs">Share local logs</string>
     <!--endregion-->
     <string name="error_kanban_view_not_supported">La vista Kanban non è ancora disponibile su mobile.\nCambia tipo di visualizzazione (Impostazioni -&gt; Vista) o crea una nuova per accedere ai tuoi dati.</string>
     <string name="error_calendar_view_not_supported">La vista Calendario non è ancora disponibile su mobile.\nCambia tipo di visualizzazione (Impostazioni -&gt; Vista) o crea una nuova per accedere ai tuoi dati.\"</string>
@@ -1561,20 +1563,20 @@ Please provide specific details of your needs here.</string>
     <string name="chats_message_edited">modificato</string>
     <string name="chat_empty_state_message">Non ci sono ancora messaggi.\nSii il primo ad avviare una discussione.</string>
     <string name="write_a_message">Scrivi un messaggio...</string>
-    <string name="date_layout_mentioned_in">Menzionato in</string>
+    <string name="date_layout_mentioned_in">Mentions</string>
     <string name="date_layout_empty_items">Non c\'è ancora nulla per questa data</string>
     <string name="date_layout_alert_date_out_of_range">La data selezionata non rientra nell\'intervallo valido (anni da %1$d a %2$d). Selezionare una data compresa in questo intervallo.</string>
     <string name="date_layout_item_created_by">da</string>
-    <string name="chat_attachment_object">Oggetto</string>
-    <string name="chat_attachment_file">File</string>
-    <string name="chat_attachment_media">Multimedia</string>
+    <string name="chat_attachment_object">Selezionare l\'oggetto esistente</string>
+    <string name="chat_attachment_file">Carica file</string>
+    <string name="chat_attachment_media">Carica i media</string>
     <string name="chat_attachment_upload">Carica</string>
     <string name="chats_reply">Rispondi</string>
-    <string name="day_of_week_monday">Monday</string>
-    <string name="day_of_week_tuesday">Tuesday</string>
-    <string name="day_of_week_wednesday">Wednesday</string>
-    <string name="day_of_week_thursday">Thursday</string>
-    <string name="day_of_week_friday">Friday</string>
-    <string name="day_of_week_saturday">Saturday</string>
-    <string name="day_of_week_sunday">Sunday</string>
+    <string name="day_of_week_monday">Lunedì</string>
+    <string name="day_of_week_tuesday">Martedì</string>
+    <string name="day_of_week_wednesday">Mercoledì</string>
+    <string name="day_of_week_thursday">Giovedì</string>
+    <string name="day_of_week_friday">Venerdì</string>
+    <string name="day_of_week_saturday">Sabato</string>
+    <string name="day_of_week_sunday">Domenica</string>
 </resources>

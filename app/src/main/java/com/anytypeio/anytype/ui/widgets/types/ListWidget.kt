@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.anytypeio.anytype.R
 import com.anytypeio.anytype.core_models.Id
 import com.anytypeio.anytype.core_models.ObjectWrapper
+import com.anytypeio.anytype.core_ui.extensions.getPrettyName
 import com.anytypeio.anytype.core_ui.foundation.noRippleClickable
 import com.anytypeio.anytype.core_ui.views.PreviewTitle2Medium
 import com.anytypeio.anytype.core_ui.widgets.ListWidgetObjectIcon
@@ -161,13 +162,15 @@ fun CompactListWidgetList(
                 ListWidgetObjectIcon(
                     iconSize = 18.dp,
                     icon = element.objectIcon,
-                    modifier = Modifier.align(Alignment.CenterVertically).padding(start = 0.dp, end = 4.dp),
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .padding(start = 0.dp, end = 4.dp),
                     onTaskIconClicked = { isChecked ->
                         onObjectCheckboxClicked(element.obj.id, isChecked)
                     }
                 )
                 Text(
-                    text = element.name.prettyPrintName ?: stringResource(id = R.string.untitled),
+                    text = element.getPrettyName(),
                     modifier = Modifier
                         .padding(start = 8.dp)
                         .fillMaxWidth(),

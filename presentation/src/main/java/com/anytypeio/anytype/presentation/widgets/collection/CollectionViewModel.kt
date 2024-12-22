@@ -95,7 +95,7 @@ class CollectionViewModel(
     private val setObjectListIsArchived: SetObjectListIsArchived,
     private val setObjectListIsFavorite: SetObjectListIsFavorite,
     private val deleteObjects: DeleteObjects,
-    private val resourceProvider: CollectionResourceProvider,
+    private val resourceProvider: ResourceProvider,
     private val openObject: OpenObject,
     private val createObject: CreateObject,
     interceptEvents: InterceptEvents,
@@ -230,6 +230,7 @@ class CollectionViewModel(
     }
 
     fun onStart(subscription: Subscription) {
+        Timber.i("CollectionViewModel, onStart, subscription:${subscription}")
         val isFirstLaunch = this.subscription == Subscription.None
         this.subscription = subscription
         if (permission.value?.isOwnerOrEditor() == true && isFirstLaunch && (subscription == Subscription.Bin || subscription == Subscription.Files)) {
@@ -988,7 +989,7 @@ class CollectionViewModel(
         private val setObjectListIsArchived: SetObjectListIsArchived,
         private val setObjectListIsFavorite: SetObjectListIsFavorite,
         private val deleteObjects: DeleteObjects,
-        private val resourceProvider: CollectionResourceProvider,
+        private val resourceProvider: ResourceProvider,
         private val openObject: OpenObject,
         private val createObject: CreateObject,
         private val interceptEvents: InterceptEvents,

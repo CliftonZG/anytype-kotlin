@@ -20,7 +20,7 @@ import com.anytypeio.anytype.domain.block.interactor.ClearBlockStyle
 import com.anytypeio.anytype.domain.block.interactor.CreateBlock
 import com.anytypeio.anytype.domain.block.interactor.DuplicateBlock
 import com.anytypeio.anytype.domain.block.interactor.MergeBlocks
-import com.anytypeio.anytype.domain.block.interactor.MoveOld
+import com.anytypeio.anytype.domain.block.interactor.Move
 import com.anytypeio.anytype.domain.block.interactor.RemoveLinkMark
 import com.anytypeio.anytype.domain.block.interactor.ReplaceBlock
 import com.anytypeio.anytype.domain.block.interactor.SetLinkAppearance
@@ -131,6 +131,7 @@ import com.anytypeio.anytype.presentation.util.Dispatcher
 import com.anytypeio.anytype.presentation.util.downloader.DebugTreeShareDownloader
 import com.anytypeio.anytype.presentation.util.downloader.DocumentFileShareDownloader
 import com.anytypeio.anytype.presentation.util.downloader.UriFileProvider
+import com.anytypeio.anytype.presentation.widgets.collection.ResourceProvider
 import com.anytypeio.anytype.providers.DefaultCoverImageHashProvider
 import com.anytypeio.anytype.ui.editor.EditorFragment
 import dagger.BindsInstance
@@ -380,14 +381,16 @@ object EditorSessionModule {
         coverImageHashProvider: CoverImageHashProvider,
         storeOfRelations: StoreOfRelations,
         storeOfObjectTypes: StoreOfObjectTypes,
-        fieldParser: FieldParser
+        fieldParser: FieldParser,
+        resourceProvider: ResourceProvider
     ): DefaultBlockViewRenderer = DefaultBlockViewRenderer(
         urlBuilder = urlBuilder,
         toggleStateHolder = toggleStateHolder,
         coverImageHashProvider = coverImageHashProvider,
         storeOfRelations = storeOfRelations,
         storeOfObjectTypes = storeOfObjectTypes,
-        fieldParser = fieldParser
+        fieldParser = fieldParser,
+        resourceProvider = resourceProvider
     )
 
     @JvmStatic
@@ -444,7 +447,7 @@ object EditorSessionModule {
         createTable: CreateTable,
         fillTableRow: FillTableRow,
         matcher: DefaultPatternMatcher,
-        move: MoveOld,
+        move: Move,
         copy: Copy,
         paste: Paste,
         undo: Undo,
@@ -814,15 +817,6 @@ object EditorUseCaseModule {
     ): Copy = Copy(
         repo = repo,
         clipboard = clipboard
-    )
-
-    @JvmStatic
-    @Provides
-    @PerScreen
-    fun provideMoveUseCase(
-        repo: BlockRepository
-    ): MoveOld = MoveOld(
-        repo = repo
     )
 
     @JvmStatic
