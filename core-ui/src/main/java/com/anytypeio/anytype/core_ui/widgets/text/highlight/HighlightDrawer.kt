@@ -2,7 +2,6 @@ package com.anytypeio.anytype.core_ui.widgets.text.highlight
 
 import android.content.res.Resources
 import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.text.Annotation
 import android.text.Layout
@@ -12,7 +11,6 @@ import com.anytypeio.anytype.core_ui.R
 import com.anytypeio.anytype.core_ui.common.Span
 import com.anytypeio.anytype.core_ui.extensions.veryLight
 import com.anytypeio.anytype.core_models.ThemeColor
-import com.anytypeio.anytype.core_ui.common.InlineLatexSpan
 import timber.log.Timber
 
 /**

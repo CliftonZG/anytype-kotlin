@@ -2,7 +2,6 @@ package com.anytypeio.anytype.core_ui.widgets
 
 import android.content.Context
 import android.graphics.Rect
-import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
 import android.util.AttributeSet
@@ -12,12 +11,6 @@ import androidx.appcompat.widget.AppCompatEditText
 import com.anytypeio.anytype.core_ui.features.editor.EditorTouchProcessor
 import com.anytypeio.anytype.core_ui.tools.TextInputTextWatcher
 import com.anytypeio.anytype.core_ui.widgets.text.MonospaceTabTextWatcher
-import com.anytypeio.anytype.library_syntax_highlighter.Syntax
-import com.anytypeio.anytype.library_syntax_highlighter.SyntaxHighlighter
-import com.anytypeio.anytype.library_syntax_highlighter.SyntaxTextWatcher
-import com.anytypeio.anytype.library_syntax_highlighter.Syntaxes
-import com.anytypeio.anytype.library_syntax_highlighter.obtainGenericSyntaxRules
-import com.anytypeio.anytype.library_syntax_highlighter.obtainSyntaxRules
 import timber.log.Timber
 
 class LatexInputWidget : AppCompatEditText{
