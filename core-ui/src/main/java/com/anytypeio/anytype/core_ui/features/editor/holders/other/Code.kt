@@ -45,14 +45,21 @@ class Code(
         get() = binding.snippet
 
     val editorTouchProcessor = EditorTouchProcessor(
-        fallback = { e -> itemView.onTouchEvent(e) }
+        fallback = { e ->
+            Timber.v("CodeClass, editorTouchProcessor, fallback: $e")
+            itemView.onTouchEvent(e)
+        }
     )
 
     override val decoratableContainer: EditorDecorationContainer
         get() = binding.decorationContainer
 
     init {
-        content.setOnTouchListener { v, e -> editorTouchProcessor.process(v, e) }
+        //content.setOnTouchListener { v, e -> editorTouchProcessor.process(v, e) }
+        root.setOnTouchListener { v, e ->
+            Timber.d("CodeClass, content setOnTouchListener, v: $v, e: $e")
+            editorTouchProcessor.process(v, e)
+        }
     }
 
     fun bind(
@@ -63,7 +70,6 @@ class Code(
         clicked: (ListenerType) -> Unit,
         onTextInputClicked: (String) -> Unit
     ) {
-        Log.v("CodeClass", "bind!!!!!!!!!!!!!!!!!!!!!!")
         indentize(item)
         if (item.mode == BlockView.Mode.READ) {
             content.setText(item.text)
@@ -201,7 +207,7 @@ class Code(
             Log.v("code", "setting focus")
         } else {
             content.clearFocus()
-            Log.v("code", "clearing focus")
+            Log.v("CodeClass", "clearing focus")
         }
     }
 

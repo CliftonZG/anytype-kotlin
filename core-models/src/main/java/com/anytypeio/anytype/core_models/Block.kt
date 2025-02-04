@@ -167,7 +167,8 @@ data class Block(
                     BACKGROUND_COLOR,
                     MENTION,
                     EMOJI,
-                    OBJECT
+                    OBJECT,
+                    LATEX
                 }
 
                 fun isClickableMark(): Boolean =

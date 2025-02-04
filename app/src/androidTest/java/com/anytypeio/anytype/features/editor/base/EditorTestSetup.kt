@@ -40,6 +40,7 @@ import com.anytypeio.anytype.domain.block.interactor.UpdateBackgroundColor
 import com.anytypeio.anytype.domain.block.interactor.UpdateBlocksMark
 import com.anytypeio.anytype.domain.block.interactor.UpdateCheckbox
 import com.anytypeio.anytype.domain.block.interactor.UpdateFields
+import com.anytypeio.anytype.domain.block.interactor.UpdateLatex
 import com.anytypeio.anytype.domain.block.interactor.UpdateLinkMarks
 import com.anytypeio.anytype.domain.block.interactor.UpdateText
 import com.anytypeio.anytype.domain.block.interactor.UpdateTextColor
@@ -103,6 +104,7 @@ import com.anytypeio.anytype.presentation.editor.EditorViewModel
 import com.anytypeio.anytype.presentation.editor.EditorViewModelFactory
 import com.anytypeio.anytype.presentation.editor.cover.CoverImageHashProvider
 import com.anytypeio.anytype.presentation.editor.editor.Interactor
+import com.anytypeio.anytype.presentation.editor.editor.LatexInteractor
 import com.anytypeio.anytype.presentation.editor.editor.Orchestrator
 import com.anytypeio.anytype.presentation.editor.editor.Proxy
 import com.anytypeio.anytype.presentation.editor.editor.pattern.DefaultPatternMatcher
@@ -162,6 +164,9 @@ open class EditorTestSetup {
 
     @Mock
     lateinit var updateText: UpdateText
+
+    @Mock
+    lateinit var updateLatex: UpdateLatex
 
     @Mock
     lateinit var createBlock: CreateBlock
@@ -470,7 +475,12 @@ open class EditorTestSetup {
                 clearBlockContent = clearBlockContent,
                 clearBlockStyle = clearBlockStyle,
                 analyticsSpaceHelperDelegate = analyticSpaceHelperDelegate,
-                spaceManager = spaceManager
+                spaceManager = spaceManager,
+                updateLatex = updateLatex,
+                latexInteractor = LatexInteractor.LatexTextInteractor(
+                    proxies = proxies,
+                    stores = stores,
+                ),
             ),
             createObjectAsMentionOrLink = createObjectAsMentionOrLink,
             analytics = analytics,

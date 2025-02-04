@@ -3,15 +3,21 @@ package com.anytypeio.anytype.core_ui.common
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.FileUriExposedException
 import android.provider.Browser
 import android.text.Annotation
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.Spanned
 import android.text.TextPaint
 import android.text.style.*
+import android.util.Log
 import android.view.View
 import com.anytypeio.anytype.core_ui.R
 import com.anytypeio.anytype.core_ui.extensions.color
@@ -20,14 +26,105 @@ import com.anytypeio.anytype.core_utils.ext.timber
 import com.anytypeio.anytype.core_utils.ext.toast
 import com.shekhargulati.urlcleaner.UrlCleaner
 import com.shekhargulati.urlcleaner.UrlCleanerException
+import io.nano.tex.Graphics2D
+import io.nano.tex.LaTeX
+import io.nano.tex.TeXRender
 import timber.log.Timber
 import kotlin.math.roundToInt
+
+// InlineLatexSpan is a custom span that holds the LaTeX rendering details
+class InlineLatexSpan(private val render: TeXRender, private val plainText: String) : ReplacementSpan() {
+    override fun getSize(paint: Paint, text: CharSequence, start: Int, end: Int, fm: Paint.FontMetricsInt?): Int {
+        // Use the getWidth() from TeXRender to determine the span's width
+        val width = render.width
+        val height = render.height
+        val depth = render.depth
+
+        // If FontMetricsInt is provided, adjust the ascent and descent
+        if (fm != null) {
+            Timber.d("InlineLatexSpan, fm != null")
+            fm.ascent = -height          // Ascent is negative height (distance from baseline to top)
+            fm.descent = depth           // Descent is the depth (distance from baseline to bottom)
+            fm.top = fm.ascent           // Top is the ascent
+            fm.bottom = fm.ascent + depth  // Bottom is the sum of ascent and depth
+        }
+
+        // Return the width of the rendered LaTeX
+        Timber.d("InlineLatexSpan: getSize - LaTeX width: $width, height: $height, depth: $depth")
+        return width
+    }
+
+    fun getPlainText(): String {
+        return plainText
+    }
+
+    override fun draw(
+        canvas: Canvas,
+        text: CharSequence?,
+        start: Int,
+        end: Int,
+        x: Float,
+        top: Int,
+        y: Int,
+        bottom: Int,
+        paint: Paint
+    ) {
+        // Log drawing details for debugging
+        Timber.d("Canvas size: ${canvas.width}x${canvas.height}")
+
+        // Calculate the LaTeX height and depth
+        val height = render.height
+        val depth = render.depth
+
+        val adjustedY = y - height + depth
+
+        Timber.d("InlineLatexSpan: draw - Drawing LaTeX at x: $x, y: $adjustedY, with render: $render")
+
+        try {
+            Timber.d("InlineLatexSpan draw")
+            render.draw(Graphics2D(canvas), x.toInt(), adjustedY)
+        } catch (e: Exception) {
+            Timber.e("InlineLatexSpan draw: ${e.message}")
+        }
+        Timber.d("finished rendering")
+    }
+}
 
 interface Span {
     class Bold : StyleSpan(Typeface.BOLD), Span
     class Italic : StyleSpan(Typeface.ITALIC), Span
     class Strikethrough : StrikethroughSpan(), Span
     class TextColor(color: Int, val value: String) : ForegroundColorSpan(color), Span
+
+    class Latex : Span {
+        var render: TeXRender? = null
+        // Function to convert LaTeX string to Spannable
+        fun convertLatexToSpannable(latex: String, width: Int, textSize: Float, textColor: Int): InlineLatexSpan? {
+            Timber.d("convertLatexToSpannable, latex: $latex")
+            try {
+                render = LaTeX.instance().parse(latex, width, textSize, 10F, textColor)
+            } catch (e: Exception) {
+                Timber.e("parseLaTeX: ${e.message}")
+            }
+
+            if (render == null) {
+                Timber.w("")
+                return null
+            } else {
+                Timber.d("finished parsing latex")
+                return InlineLatexSpan(render!!, latex)
+            }
+        }
+        private fun calculateDynamicWidth(latex: String, textSize: Float, paddingLeft: Int, paddingRight: Int): Int {
+            // Here, we'll estimate the width using Paint.measureText()
+            val paint = Paint()
+            paint.textSize = textSize.toFloat()
+
+            // We calculate the width of the LaTeX content.
+            // You can optionally add padding or margins as needed.
+            return (paint.measureText(latex) + paddingLeft + paddingRight).toInt()
+        }
+    }
 
     class Url(
         val url: String,

@@ -585,9 +585,12 @@ class EditorViewModel(
         viewModelScope.launch {
             orchestrator.stores.focus.stream().collect { focus ->
                 if (focus.isEmpty) {
+                    Timber.d("startProcessingFocusChanges(), focus.isEmpty")
                     orchestrator.stores.textSelection.update(Editor.TextSelection.empty())
                 } else {
+                    Timber.d("startProcessingFocusChanges(), focus.isNOTEmpty")
                     if (!focus.isPending) {
+                        Timber.d("startProcessingFocusChanges(), !focus.isPending")
                         val focused = focus.targetOrNull()
                         val event = if (focused != null)
                             views.getOnFocusChangedEvent(blockId = focused)
@@ -1886,7 +1889,7 @@ class EditorViewModel(
         val restrictions = orchestrator.stores.objectRestrictions.current()
         if (restrictions.isNotEmpty()) {
             when (view) {
-                is BlockView.Code, is BlockView.Text,
+                is BlockView.Code, is BlockView.Text, is BlockView.Latex,
                 is BlockView.Media, is BlockView.MediaPlaceholder,
                 is BlockView.Upload -> {
                     if (restrictions.contains(ObjectRestriction.BLOCKS)) {
@@ -4089,6 +4092,7 @@ class EditorViewModel(
                 dispatch(Command.OpenDocumentImagePicker(Mimetype.MIME_IMAGE_ALL))
             }
             is ListenerType.LongClick -> {
+                Timber.d("EditorViewModel, LongClick")
                 when (mode) {
                     EditorMode.Edit -> proceedWithEnteringActionMode(clicked.target)
                     EditorMode.Select -> onBlockMultiSelectClicked(target = clicked.target)
@@ -4175,18 +4179,6 @@ class EditorViewModel(
                         Log.v("EditorViewModel", "onClickListener, ListenerType.Latex.SelectLatexTemplate")
                         dispatch(Command.Dialog.SelectLatexTemplate(clicked.template))
                     }
-//                  EditorMode.Edit -> proceedWithEnteringActionMode(clicked.id)
-                    // EditorMode.Select -> onBlockMultiSelectClicked(clicked.id)
-                    else -> Unit
-                }
-            }
-            is ListenerType.Latex.EnableEditMode -> {
-                when (mode) {
-                    EditorMode.Edit -> {
-                        Log.v("EditorViewModel", "onClickListener, ListenerType.Latex.EnableEditMode")
-                    }
-//                  EditorMode.Edit -> proceedWithEnteringActionMode(clicked.id)
-                    // EditorMode.Select -> onBlockMultiSelectClicked(clicked.id)
                     else -> Unit
                 }
             }

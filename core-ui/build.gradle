@@ -27,6 +27,7 @@ dependencies {
     implementation project(':presentation')
     implementation project(':library-emojifier')
     implementation project(':library-syntax-highlighter')
+    implementation files('../libs/libtex.aar')
 
     implementation libs.appcompat
     implementation libs.kotlin
@@ -68,3 +69,5 @@ dependencies {
     testImplementation libs.androidXTestCore
     testImplementation libs.mockitoKotlin
 }
+
+android.buildFeatures.buildConfig=true

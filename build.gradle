@@ -27,11 +27,14 @@ buildscript {
         google()
         mavenCentral()
         maven { url "https://jitpack.io" }
+        flatDir {
+            dirs 'libs'  // Replace with the directory where your .aar file is located
+        }
     }
 
     if (ext.onCi) {
         dependencies {
-            classpath "com.github.openkin:license-gradle-plugin:0d9582e233"
+            classpath libs.licenseGradlePlugin
         }
     }
 }
@@ -76,12 +79,12 @@ subprojects {
         if (plugin instanceof KotlinAndroidPluginWrapper) {
             android {
                 compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_17
-                    targetCompatibility JavaVersion.VERSION_17
+                    sourceCompatibility JavaVersion.VERSION_21
+                    targetCompatibility JavaVersion.VERSION_21
                 }
 
                 kotlin {
-                    jvmToolchain(17)
+                    jvmToolchain(21)
                 }
             }
         }

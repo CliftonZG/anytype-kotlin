@@ -68,3 +68,6 @@ include ':gallery-experience'
 include ':feature-discussions'
 include ':feature-all-content'
 include ':feature-date'
+include ':AndroidLaTeXMath'
+
+

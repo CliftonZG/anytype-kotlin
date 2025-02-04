@@ -16,6 +16,7 @@ import com.anytypeio.anytype.presentation.editor.editor.mention.MentionEvent
 import com.anytypeio.anytype.presentation.editor.editor.model.BlockView
 import com.anytypeio.anytype.presentation.editor.editor.model.Checkable
 import com.anytypeio.anytype.presentation.editor.editor.slash.SlashEvent
+import timber.log.Timber
 
 abstract class Text<BlockTextType : BlockView.Text>(
     view: View,
@@ -33,6 +34,7 @@ abstract class Text<BlockTextType : BlockView.Text>(
         inputAction(item)
 
         if (item.mode == BlockView.Mode.READ) {
+            Timber.v("TextClass, BlockView.Mode.READ")
             enableReadMode()
             setContent(
                 item = item,
@@ -40,7 +42,7 @@ abstract class Text<BlockTextType : BlockView.Text>(
             )
             setStyle(item)
         } else {
-
+            Timber.v("TextClass, BlockView.Mode.EDIT")
             content.pauseTextWatchers {
                 enableEditMode()
             }
@@ -60,7 +62,9 @@ abstract class Text<BlockTextType : BlockView.Text>(
     }
 
     private fun setContent(item: BlockView.TextBlockProps, clicked: (ListenerType) -> Unit) {
+        Timber.v("TextClass, SetContent")
         content.pauseTextWatchers {
+            Timber.v("TextClass, SetContent, content.pauseTextWatchers")
             setBlockText(
                 text = item.text,
                 markup = item,
@@ -88,6 +92,7 @@ abstract class Text<BlockTextType : BlockView.Text>(
         onTextChanged: (Editable) -> Unit,
         onBackPressedCallback: (() -> Boolean)? = null
     ) {
+        Timber.v("TextClass, SetContent, observe")
         content.apply {
             addTextChangedListener(
                 DefaultTextWatcher { text ->
@@ -101,6 +106,7 @@ abstract class Text<BlockTextType : BlockView.Text>(
     }
 
     fun selection(item: BlockView.Selectable) {
+        Timber.v("TextClass, selection")
         select(item)
     }
 

@@ -187,6 +187,7 @@ private fun Markup.Mark.updateRanges(start: Int, length: Int): Markup.Mark {
         }
     }
     return when (this) {
+        is Markup.Mark.Latex -> copy(from = newFrom, to = newTo)
         is Markup.Mark.BackgroundColor -> copy(from = newFrom, to = newTo)
         is Markup.Mark.Bold -> copy(from = newFrom, to = newTo)
         is Markup.Mark.Italic -> copy(from = newFrom, to = newTo)

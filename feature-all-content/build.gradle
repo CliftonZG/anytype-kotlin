@@ -58,3 +58,5 @@ dependencies {
     testImplementation libs.timberJUnit
     testImplementation libs.turbine
 }
+
+android.buildFeatures.buildConfig=true

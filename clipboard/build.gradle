@@ -34,3 +34,5 @@ dependencies {
     testImplementation libs.androidXTestCore
     testImplementation libs.robolectric
 }
+
+android.buildFeatures.buildConfig=true

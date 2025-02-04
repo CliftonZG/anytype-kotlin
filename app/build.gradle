@@ -153,7 +153,10 @@ android {
     namespace 'com.anytypeio.anytype'
 }
 
+
 dependencies {
+
+    implementation files('../libs/libtex.aar')
 
     implementation project(':domain')
     implementation project(':core-models')
@@ -242,7 +245,8 @@ dependencies {
     implementation libs.androidxSecurityCrypto
     implementation libs.middleware
 
-    implementation libs.wireRuntime
+    // https://mvnrepository.com/artifact/com.squareup.wire/wire-runtime
+    implementation("com.squareup.wire:wire-runtime:5.2.1")
 
     //Unit/Integration tests dependencies
     testImplementation libs.androidXTestCore
@@ -274,3 +278,5 @@ dependencies {
 }
 
 apply plugin: 'com.google.gms.google-services'
+
+android.buildFeatures.buildConfig=true

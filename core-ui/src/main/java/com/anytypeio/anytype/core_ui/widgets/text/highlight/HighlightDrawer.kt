@@ -2,6 +2,7 @@ package com.anytypeio.anytype.core_ui.widgets.text.highlight
 
 import android.content.res.Resources
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.text.Annotation
 import android.text.Layout
@@ -11,6 +12,7 @@ import com.anytypeio.anytype.core_ui.R
 import com.anytypeio.anytype.core_ui.common.Span
 import com.anytypeio.anytype.core_ui.extensions.veryLight
 import com.anytypeio.anytype.core_models.ThemeColor
+import com.anytypeio.anytype.core_ui.common.InlineLatexSpan
 import timber.log.Timber
 
 /**
@@ -106,6 +108,21 @@ class HighlightDrawer(
                 else -> Timber.e("Unexpected span: $span")
             }
         }
+        /*
+        // Draw LaTeX spans (InlineLatexSpan)
+        text.getSpans(0, text.length, InlineLatexSpan::class.java).forEach { latexSpan ->
+            val start = text.getSpanStart(latexSpan)
+            val end = text.getSpanEnd(latexSpan)
+
+            // Calculate the position and size to draw the LaTeX expression
+            val x = layout.getPrimaryHorizontal(start)
+            val y = layout.getLineBaseline(layout.getLineForOffset(start))
+
+            // Draw the LaTeX span directly
+            latexSpan.draw(canvas, text, start, end, x, 0, y, y + layout.getLineBottom(layout.getLineForOffset(start)), Paint())
+        }
+
+         */
     }
 
     private fun drawBackgroundHighlight(

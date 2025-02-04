@@ -534,6 +534,7 @@ fun MBTextStyle.toCoreModels(): Block.Content.Text.Style = when (this) {
 }
 
 fun MBMarkType.toCoreModels(): Block.Content.Text.Mark.Type = when (this) {
+    MBMarkType.Latex -> Block.Content.Text.Mark.Type.LATEX
     MBMarkType.Strikethrough -> Block.Content.Text.Mark.Type.STRIKETHROUGH
     MBMarkType.Keyboard -> Block.Content.Text.Mark.Type.KEYBOARD
     MBMarkType.Italic -> Block.Content.Text.Mark.Type.ITALIC

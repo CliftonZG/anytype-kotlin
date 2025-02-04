@@ -275,6 +275,7 @@ message Block {
                     Mention = 8;
                     Emoji = 9;
                     Object = 10;
+                    Latex = 11;
                 }
             }
 

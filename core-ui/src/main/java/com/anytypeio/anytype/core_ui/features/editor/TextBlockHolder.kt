@@ -75,6 +75,7 @@ interface TextBlockHolder : TextHolder {
         clicked: (ListenerType) -> Unit,
         textColor: Int
     ) {
+        Timber.d("setBlockSpannableText")
         when (markup.marks.any { it is Markup.Mark.Mention || it is Markup.Mark.Object }) {
             true -> setSpannableWithMention(markup, clicked, textColor)
             false -> setSpannable(markup, textColor)
@@ -83,6 +84,7 @@ interface TextBlockHolder : TextHolder {
 
     private fun setSpannable(markup: Markup, textColor: Int) {
         runCatching {
+            Timber.d("setSpannable")
             content.setText(
                 markup.toSpannable(
                     textColor = textColor,

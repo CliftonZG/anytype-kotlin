@@ -418,6 +418,10 @@ fun Block.Fields.getName(): String =
     }
 
 fun Markup.Mark.mark(): Block.Content.Text.Mark = when (this) {
+    is Markup.Mark.Latex -> Block.Content.Text.Mark(
+        range = from..to,
+        type = Block.Content.Text.Mark.Type.LATEX
+    )
     is Markup.Mark.Bold -> Block.Content.Text.Mark(
         range = from..to,
         type = Block.Content.Text.Mark.Type.BOLD

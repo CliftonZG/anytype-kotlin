@@ -10,11 +10,14 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.FrameLayout
+import android.widget.TextView
 import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.anytypeio.anytype.core_models.Id
 import com.anytypeio.anytype.core_ui.BuildConfig
+import com.anytypeio.anytype.core_ui.R
 import com.anytypeio.anytype.core_ui.databinding.ItemBlockBookmarkBinding
 import com.anytypeio.anytype.core_ui.databinding.ItemBlockBulletedBinding
 import com.anytypeio.anytype.core_ui.databinding.ItemBlockCalloutBinding
@@ -121,6 +124,7 @@ import com.anytypeio.anytype.core_ui.features.table.holders.TableBlockHolder
 import com.anytypeio.anytype.core_ui.tools.ClipboardInterceptor
 import com.anytypeio.anytype.core_ui.tools.DefaultTextWatcher
 import com.anytypeio.anytype.core_ui.tools.LockableFocusChangeListener
+import com.anytypeio.anytype.core_ui.views.TexView
 import com.anytypeio.anytype.core_utils.ext.imm
 import com.anytypeio.anytype.core_utils.ext.typeOf
 import com.anytypeio.anytype.core_utils.text.OnNewLineActionListener
@@ -782,49 +786,6 @@ class BlockAdapter(
             HOLDER_LATEX -> Latex(
                 ItemBlockLatexEditorBinding.inflate(inflater, parent, false)
             ).apply {
-                //latexView.isLongClickable = true
-                menu.setOnTouchListener { v, event ->
-                    Timber.d("BlockAdapter, Latex, menu, setOnTouchListener: $v, $event")
-                    if (event.action == MotionEvent.ACTION_DOWN) {
-                        val pos = bindingAdapterPosition
-                        if (pos != RecyclerView.NO_POSITION) {
-                            if (v is com.judemanutd.katexview.KatexView) {
-                                Timber.d("Touched KatexView")
-                                onClickListener(ListenerType.Latex.EnableEditMode(true))
-                            }
-                            else {
-                                onClickListener(ListenerType.Latex.SelectLatexTemplate(blocks[pos].id))
-                            }
-                            onClickListener(ListenerType.Latex.EnableEditMode(true))
-                        }
-                        v.performClick()
-                        true
-                    } else {
-                        onClickListener(ListenerType.Latex.EnableEditMode(false))
-                        false
-                    }
-                }
-                latexView.setOnTouchListener { v, event ->
-                    Timber.d("BlockAdapter, Latex, latexView, setOnTouchListener: $v, $event")
-                    if (event.action == MotionEvent.ACTION_DOWN) {
-                        val pos = bindingAdapterPosition
-                        if (pos != RecyclerView.NO_POSITION) {
-                            if (v is com.judemanutd.katexview.KatexView) {
-                                Timber.d("Touched KatexView")
-                                onClickListener(ListenerType.Latex.EnableEditMode(true))
-                            }
-                            else {
-                                onClickListener(ListenerType.Latex.SelectLatexTemplate(blocks[pos].id))
-                            }
-                            onClickListener(ListenerType.Latex.EnableEditMode(true))
-                        }
-                        v.performClick()
-                        true
-                    } else {
-                        onClickListener(ListenerType.Latex.EnableEditMode(false))
-                        false
-                    }
-                }
                 with(content) {
                     selectionWatcher = { selection ->
                         val pos = bindingAdapterPosition
@@ -893,6 +854,7 @@ class BlockAdapter(
         }
 
         if (holder is Text<*>) {
+            Timber.v("BlockAdapter, holder is Text<*>")
             holder.content.setOnDragListener(onDragListener)
             holder.content.editorTouchProcessor.onLongClick = {
                 val pos = holder.bindingAdapterPosition
@@ -955,24 +917,27 @@ class BlockAdapter(
                     }
                     is Code -> {
                         holder.editorTouchProcessor.onLongClick = {
+                            Timber.v("BlockAdapter, Code, editorTouchProcessor.onLongClick")
                             val pos = holder.bindingAdapterPosition
                             if (pos != RecyclerView.NO_POSITION) {
                                 onClickListener(LongClick(target = blocks[pos].id))
                             }
                         }
                         holder.editorTouchProcessor.onDragAndDropTrigger = {
+                            Timber.v("BlockAdapter, Code, editorTouchProcessor.onDragAndDropTrigger")
                             onDragAndDropTrigger(holder, it)
                         }
                     }
                     is Latex -> {
-                        Log.i("Latex", "dsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
                         holder.editorTouchProcessor.onLongClick = {
+                            Timber.v("BlockAdapter, Latex, editorTouchProcessor.onLongClick")
                             val pos = holder.bindingAdapterPosition
                             if (pos != RecyclerView.NO_POSITION) {
                                 onClickListener(LongClick(target = blocks[pos].id))
                             }
                         }
                         holder.editorTouchProcessor.onDragAndDropTrigger = {
+                            Timber.v("BlockAdapter, Latex, editorTouchProcessor.onDragAndDropTrigger")
                             onDragAndDropTrigger(holder, it)
                         }
                     }
@@ -1002,7 +967,9 @@ class BlockAdapter(
         }
 
         if (holder is TextHolder) {
+            Timber.d("holder is TextHolder")
             holder.content.onFocusChangeListener = LockableFocusChangeListener { hasFocus ->
+                Timber.d("holder is TextHolder, $hasFocus")
                 val pos = holder.bindingAdapterPosition
                 if (pos != RecyclerView.NO_POSITION) {
                     val item = views[pos]

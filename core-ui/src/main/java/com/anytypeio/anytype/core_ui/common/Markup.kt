@@ -33,6 +33,7 @@ fun Markup.toSpannable(
     marks.forEach { mark ->
         if (!isRangeValid(mark = mark, textLength = length)) return@forEach
         when (mark) {
+            is Markup.Mark.Latex -> {}
             is Markup.Mark.Italic -> setSpan(
                 Span.Italic(),
                 mark.from,
@@ -160,6 +161,7 @@ fun Editable.setMarkup(
     markup.marks.forEach { mark ->
         if (!isRangeValid(mark, length)) return@forEach
         when (mark) {
+            is Markup.Mark.Latex -> {}
             is Markup.Mark.Italic -> setSpan(
                 Span.Italic(),
                 mark.from,

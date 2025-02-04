@@ -20,6 +20,7 @@ import com.anytypeio.anytype.di.main.DaggerMainComponent
 import com.anytypeio.anytype.di.main.MainComponent
 import com.anytypeio.anytype.middleware.discovery.MDNSProvider
 import com.anytypeio.anytype.middleware.discovery.adresshandler.LocalNetworkAddressProvider
+import io.nano.tex.LaTeX
 import javax.inject.Inject
 import timber.log.Timber
 
@@ -64,6 +65,8 @@ class AndroidApplication : Application(), HasComponentDependencies {
         setupCrashReporter()
         setupLocalNetworkAddressHandler()
         setupNotificationChannel()
+        val latexInstance = LaTeX.instance()
+        latexInstance?.init(this)
     }
 
     private fun enableStrictMode() {

@@ -95,6 +95,7 @@ abstract class TestObjectSetSetup {
     private lateinit var updateDataViewViewer: UpdateDataViewViewer
     private lateinit var setObjectDetails: UpdateDetail
     private lateinit var updateText: UpdateText
+    private lateinit var updateLatex: UpdateLatex
     private lateinit var createDataViewObject: CreateDataViewObject
     private lateinit var closeBlock: CloseBlock
     private lateinit var setDocCoverImage: SetDocCoverImage
@@ -327,7 +328,8 @@ abstract class TestObjectSetSetup {
             permissions = permissions,
             analyticSpaceHelperDelegate = analyticSpaceHelperDelegate,
             spaceSyncAndP2PStatusProvider = spaceSyncAndP2PStatusProvider,
-            fieldParser = fieldParser
+            fieldParser = fieldParser,
+            updateLatex = updateLatex
         )
 
         Mockito.`when`(localeProvider.locale()).thenReturn(Locale.getDefault())

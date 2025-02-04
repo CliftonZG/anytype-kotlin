@@ -187,6 +187,12 @@ fun Block.Content.Text.toMiddlewareModelMarks(): MBMarks =
     MBMarks(marks = marks.map { it.toMiddlewareModel() })
 
 fun Block.Content.Text.Mark.toMiddlewareModel(): MBMark = when (type) {
+    Block.Content.Text.Mark.Type.LATEX -> {
+        MBMark(
+            range = range.range(),
+            type = MBMarkType.Latex
+        )
+    }
     Block.Content.Text.Mark.Type.STRIKETHROUGH -> {
         MBMark(
             range = range.range(),

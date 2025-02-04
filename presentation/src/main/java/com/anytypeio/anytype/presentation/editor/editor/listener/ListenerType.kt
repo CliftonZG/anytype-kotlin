@@ -64,7 +64,6 @@ sealed interface ListenerType {
 
     sealed class Latex : ListenerType {
         data class SelectLatexTemplate(val template: String) : Latex()
-        data class EnableEditMode(val enable: Boolean) : Latex()
     }
 
     sealed class Relation : ListenerType {

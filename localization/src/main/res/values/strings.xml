@@ -1856,4 +1856,6 @@ Please provide specific details of your needs here.</string>
     <string name="day_of_week_sunday">Sunday</string>
     <string name="file" translatable="false">File</string>
 
+    <string name="blockEmbedLatexEmpty" translatable="false">Here your equation will be rendered with [icon]. Click to edit</string>
+
 </resources>

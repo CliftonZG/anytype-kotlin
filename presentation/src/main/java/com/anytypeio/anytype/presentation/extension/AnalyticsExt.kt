@@ -223,6 +223,7 @@ fun Block.Align.getPropName() = when (this) {
 }
 
 fun Block.Content.Text.Mark.Type.getPropName() = when (this) {
+    Block.Content.Text.Mark.Type.LATEX -> "latex"
     Block.Content.Text.Mark.Type.STRIKETHROUGH -> "strikethrough"
     Block.Content.Text.Mark.Type.KEYBOARD -> "code"
     Block.Content.Text.Mark.Type.ITALIC -> "italic"
@@ -237,6 +238,7 @@ fun Block.Content.Text.Mark.Type.getPropName() = when (this) {
 }
 
 fun Markup.Type.getPropName() = when (this) {
+    Markup.Type.LATEX -> "Latex"
     Markup.Type.ITALIC -> "Italic"
     Markup.Type.BOLD -> "Bold"
     Markup.Type.STRIKETHROUGH -> "Strike"

@@ -24,6 +24,14 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    kotlin {
+        jvmToolchain(21)
+    }
 }
 
 dependencies {
@@ -63,3 +71,12 @@ dependencies {
     testImplementation project(":test:utils")
     testImplementation project(":test:core-models-stub")
 }
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    sourceCompatibility = '17'  // Set this to the desired JVM version
+    targetCompatibility = '17'  // Set this to the desired JVM version
+}
+
+
+android.buildFeatures.buildConfig=true

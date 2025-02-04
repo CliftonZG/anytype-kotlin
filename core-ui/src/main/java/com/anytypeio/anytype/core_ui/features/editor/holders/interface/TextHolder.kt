@@ -66,13 +66,16 @@ interface TextHolder {
     }
 
     fun select(item: BlockView.Selectable) {
+        Timber.d("Select: $item")
         selectionView.isSelected = item.isSelected
     }
 
     fun setFocus(item: Focusable) {
         if (item.isFocused) {
+            Timber.d("Select: $item, focused")
             focus()
         } else {
+            Timber.d("Select: $item, clearing focus")
             content.clearFocus()
         }
     }

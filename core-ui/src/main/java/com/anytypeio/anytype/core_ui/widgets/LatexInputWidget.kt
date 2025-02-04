@@ -20,12 +20,7 @@ import com.anytypeio.anytype.library_syntax_highlighter.obtainGenericSyntaxRules
 import com.anytypeio.anytype.library_syntax_highlighter.obtainSyntaxRules
 import timber.log.Timber
 
-class LatexInputWidget : AppCompatEditText, SyntaxHighlighter {
-
-    override val rules: MutableList<Syntax> = mutableListOf()
-    override val source: Editable get() = editableText
-
-    private val syntaxTextWatcher = SyntaxTextWatcher { highlight() }
+class LatexInputWidget : AppCompatEditText{
 
     private val watchers: MutableList<TextInputTextWatcher> = mutableListOf()
 
@@ -40,7 +35,6 @@ class LatexInputWidget : AppCompatEditText, SyntaxHighlighter {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         setup()
-        setupSyntaxHighlighter()
         setOnLongClickListener { view -> view != null && !view.hasFocus() }
     }
 
@@ -50,23 +44,12 @@ class LatexInputWidget : AppCompatEditText, SyntaxHighlighter {
         defStyle: Int
     ) : super(context, attrs, defStyle) {
         setup()
-        setupSyntaxHighlighter()
         setOnLongClickListener { view -> view != null && !view.hasFocus() }
     }
 
     private fun setup() {
         enableEditMode()
         super.addTextChangedListener(MonospaceTabTextWatcher(paint.measureText(MEASURING_CHAR)))
-    }
-
-    private fun setupSyntaxHighlighter() {
-        runCatching {
-            addRules(context.obtainSyntaxRules(Syntaxes.KOTLIN))
-            highlight()
-        }.onFailure {
-            Timber.Forest.e(it, "Error while setting up syntax highlighter")
-        }
-        super.addTextChangedListener(syntaxTextWatcher)
     }
 
     fun enableEditMode() {
@@ -131,25 +114,6 @@ class LatexInputWidget : AppCompatEditText, SyntaxHighlighter {
             selectionWatcher?.invoke(selStart..selEnd)
         }
         super.onSelectionChanged(selStart, selEnd)
-    }
-
-    override fun setupSyntax(lang: String?) {
-        runCatching {
-            if (lang == null) {
-                rules.clear()
-                clearHighlights()
-            } else {
-                val result = context.obtainSyntaxRules(lang)
-                if (result.isEmpty()) {
-                    addRules(context.obtainGenericSyntaxRules())
-                } else {
-                    addRules(result)
-                }
-                highlight()
-            }
-        }.onFailure {
-            Timber.Forest.e(it, "Error while setting syntax rules.")
-        }
     }
 
     override fun onDragEvent(event: DragEvent?): Boolean = true

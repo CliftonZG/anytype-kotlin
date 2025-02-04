@@ -16,11 +16,9 @@
         android:paddingBottom="4dp"
         android:minHeight="@dimen/dp_48"
         android:id="@+id/content"
-        android:background="@drawable/item_block_multi_select_mode_selector"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:clickable="true"
-        android:focusable="true">
+        android:background="@color/shape_tertiary">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -38,14 +36,23 @@
                 android:text="@string/block_embed_latex_template_menu_title"
                 android:visibility="visible"/>
 
-            <com.judemanutd.katexview.KatexView
-                android:id="@+id/latexView"
+            <com.anytypeio.anytype.core_ui.views.TexView
+                android:id="@+id/tex"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:visibility="visible"
+                android:padding="16dp"
+                android:visibility="invisible"
                 />
+
+            <TextView
+                android:id="@+id/emptyTex"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:textColor="@android:color/darker_gray"
+                android:textIsSelectable="false"
+                android:clickable="true"
+                android:visibility="visible"/>
 
             <HorizontalScrollView
                 android:id="@+id/snippet_container"
@@ -54,6 +61,7 @@
                 android:fillViewport="true"
                 android:overScrollMode="never"
                 android:scrollbars="none"
+                android:background="@android:color/black"
                 android:visibility="visible">
 
                 <com.anytypeio.anytype.core_ui.widgets.LatexInputWidget

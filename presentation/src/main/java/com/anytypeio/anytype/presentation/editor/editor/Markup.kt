@@ -33,6 +33,7 @@ interface Markup {
         data class Strikethrough(override val from: Int, override val to: Int) : Mark()
         data class Underline(override val from: Int, override val to: Int) : Mark()
         data class Keyboard(override val from: Int, override val to: Int) : Mark()
+        data class Latex(override val from: Int, override val to: Int) : Mark()
         data class TextColor(
             override val from: Int,
             override val to: Int,
@@ -160,7 +161,8 @@ interface Markup {
         KEYBOARD,
         MENTION,
         OBJECT,
-        UNDERLINE
+        UNDERLINE,
+        LATEX
     }
 
     companion object {
